@@ -1,0 +1,30 @@
+# =============================================================================
+# Secretos y Variables de Entorno (PROTECCIÓN TOTAL)
+# =============================================================================
+.env
+.env.*
+*.env
+*.env.local
+!.env.example
+
+# IDEs, caches y metadatos locales
+.gemini/
+.agents/
+.obsidian/
+.idea/
+.vscode/
+
+# Dependencias y caches
+node_modules/
+.cache/
+__pycache__/
+*.pyc
+
+# Logs y temporales
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
