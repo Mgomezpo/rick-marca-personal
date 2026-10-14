@@ -192,19 +192,6 @@ class RickTelegramBot:
         thread_id = thread.get("id")
         self.db.append_thread_message(thread_id, "user", text)
 
-        # Si el usuario nos pasa su usuario de redes y aún no se ha investigado su huella,
-        # enviamos acuse de recibo inmediato con expectativa realista (estilo Stanley / Head of Content)
-        # mientras el modelo realiza la búsqueda y análisis en segundo plano.
-        active_mem = self.db.get_active_memory(user_id)
-        mem_state = active_mem.get("state") or {}
-        answers = mem_state.get("inquiry_answers") or {}
-        detected_handle = self.orchestrator.interviewer.instagram.extract_handle(text)
-
-        if detected_handle and not answers.get("footprint_summary"):
-            ack_msg = "De una. Dame unos minutos para revisar tu cuenta y entender lo que vienes haciendo. Te escribo en cuanto termine 📲"
-            await self.send_clean_message(update, ack_msg)
-            self.db.append_thread_message(thread_id, "assistant", ack_msg)
-
         # 3. Procesar en el orquestador principal de RICK (Cero plantillas, inteligencia real)
         loop = asyncio.get_running_loop()
 

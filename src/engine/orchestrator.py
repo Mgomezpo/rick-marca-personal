@@ -12,7 +12,6 @@ from src.db.supabase import DatabaseService
 from src.engine.vfs import VirtualFileSystem
 from src.engine.tools import OPENAI_TOOLS, execute_tool_call
 from src.engine.skills_loader import skills_loader
-from src.engine.subagents.creator_interviewer import CreatorInterviewerSubagent
 
 logger = logging.getLogger("rick.orchestrator")
 
@@ -60,7 +59,6 @@ class RickOrchestrator:
         self.telemetry = TelemetryTracker(self.db.client)
         self.vfs = VirtualFileSystem(self.db)
         self.base_system_prompt = load_master_system_prompt()
-        self.interviewer = CreatorInterviewerSubagent(self.client, self.db, self.telemetry)
 
     def process_message(
         self,
@@ -71,19 +69,19 @@ class RickOrchestrator:
     ) -> str:
         """
         Ejecuta el ciclo de RICK como Head of Content:
-        1. Si el creador no ha completado el onboarding socrático (Método Rubin),
-           enruta al CreatorInterviewerSubagent (skills/creator-interview).
-        2. Si ya está consolidado en el estudio, orquesta con Function Calling real
-           ejecutando el pipeline de producción (HookWriter -> Guionista -> Humanizer).
+        - Si el creador no ha completado el onboarding socrático (onboarding_status != 'completed'),
+          opera bajo la skill de creator-interview con herramientas (investigar_huella_creador, completar_onboarding_creador).
+        - Si ya está consolidado en el estudio (onboarding_status == 'completed'), opera en modo producción activa
+          con pipeline de guiones (redactar_guion_formato_oficial) y memoria viva.
+        Todo fluye a través del motor unificado de Function Calling de OpenAI (con fallback a Gemini).
         """
         start_time = time.time()
         logger.info(f"🎙️ [RICK Orchestrator] Mensaje de usuario {user_id}: '{user_message[:60]}...'")
 
-        # 1. Estado de memoria Tier-1 y VFS
-        active_mem = self.db.get_active_memory(user_id)
-        mem_state = active_mem.get("state") or {}
-        inquiry_step = mem_state.get("inquiry_step", 0)
-        onboarding_completed = mem_state.get("onboarding_completed", False)
+        # 1. Estado de memoria y perfil en BD
+        profile = self.db.get_user_profile(user_id) or {}
+        is_onboarded = (profile.get("onboarding_status") == "completed")
+        known_handle = profile.get("analytics_username") or profile.get("instagram_handle") or ""
 
         voice_dna_md = self.vfs.read_file("creator/identity/voice_dna.md", user_id)
         positioning_md = self.vfs.read_file("creator/identity/positioning.md", user_id)
@@ -91,49 +89,44 @@ class RickOrchestrator:
         active_ctx_md = self.vfs.read_file("memorias/active_context.md", user_id)
         recent_scripts_md = self.vfs.read_file("produccion/scripts", user_id)
 
-        has_voice = bool(voice_dna_md and "sin voz registrada" not in voice_dna_md.lower() and "[pendiente_de_entrevista]" not in voice_dna_md.lower() and len(voice_dna_md.strip()) > 20)
-        has_niche = bool(positioning_md and "sin nicho registrado" not in positioning_md.lower() and "[pendiente_de_entrevista]" not in positioning_md.lower() and len(positioning_md.strip()) > 20)
-        profile = self.db.get_user_profile(user_id) or {}
-        is_onboarded = bool(onboarding_completed or (profile.get("onboarding_status") == "completed"))
-
-        # 2. ENRUTAMIENTO SOCRÁTICO DE ONBOARDING (skills/creator-interview)
+        # 2. Inyección dinámica según estado del binario en BD
         if not is_onboarded:
-            logger.info(f"🎙️ [Orchestrator] Enrutando a CreatorInterviewerSubagent (LLM Rubin) para {user_id}")
-            reply, is_done = self.interviewer.process_turn(user_message, user_id, active_mem, thread_id=thread_id)
-            latency = int((time.time() - start_time) * 1000)
-            self.telemetry.log_turn(
-                phase="routing",
-                model_name=config.ORCHESTRATOR_MODEL,
-                prompt_tokens=100,
-                completion_tokens=100,
-                latency_ms=latency,
-                user_id=user_id,
-                thread_id=thread_id,
-                channel=channel
-            )
-            return reply
-
-        # Base de contexto viva del Creador (disponible en la mesa de estudio)
-        context_block = (
-            f"### RADIOGRAFÍA Y LORE DEL CREADOR (MULTI-TENANT):\n{lore_md}\n\n"
-            f"### ADN DE VOZ Y POSICIONAMIENTO:\n{voice_dna_md}\n\n{positioning_md}\n\n"
-            f"### MEMORIA ACTIVA Y ESTADO ACTUAL:\n{active_ctx_md}\n\n"
-            f"### GUIONES Y PIEZAS EN LA MESA:\n{recent_scripts_md}\n\n"
-        )
-
-        if not is_onboarded:
-            context_block += (
-                "### ESTADO DEL CREADOR: EN PROCESO DE DEFINICIÓN / ONBOARDING ACTIVO\n"
-                "El creador te acaba de hacer una pregunta sobre quién eres o qué sabes de él.\n"
-                "- Resume con precisión y empatía de artesano lo que te ha contado hasta ahora (sus proyectos, conocimientos técnicos o dolores como monetizar o miedo a cobrar).\n"
-                "- Explícale que eres RICK, su Head of Content y guardián de criterio, inspirado en Rick Rubin. No un bot de autoayuda, sino un productor de trinchera que lo acompaña a destilar su verdad.\n"
-                "- Cierra con una sola pregunta corta invitándolo a continuar la entrevista socrática para asentar su mundo.\n"
+            interview_skill = skills_loader.get_skill("creator-interview") or ""
+            handle_status = f"Usuario de Instagram ya registrado: @{known_handle}" if known_handle else "Aún no ha proporcionado su usuario de redes."
+            context_block = (
+                f"### ESTADO DEL CREADOR: EN ONBOARDING SOCRÁTICO (skills/creator-interview)\n"
+                f"{handle_status}\n\n"
+                f"### PROTOCOLO DE ONBOARDING (EL MÉTODO RUBIN):\n"
+                f"{interview_skill}\n\n"
+                f"### FLUJO OBLIGATORIO DE ONBOARDING:\n"
+                f"1. PRIMER CONTACTO (si el usuario saluda, pregunta quién eres o aún no da su usuario de redes):\n"
+                f"   Preséntate con autoridad y cercanía de Head of Content:\n"
+                f"   '¡Ey! Soy RICK, tu nuevo Head of Content. Hago crecer tu audiencia estudiando lo que publicas y haciendo el trabajo real 📈\\n\\nTu prueba corre por mi cuenta. Después acordamos juntos qué quieres que maneje y cuánto vale eso.\\n\\n¿Cuáles son tus redes? Déjame ver qué has estado haciendo 📲'\n\n"
+                f"2. INVESTIGACIÓN DE HUELLA (cuando el creador comparta su @handle o link de Instagram):\n"
+                f"   - LLAMA DE INMEDIATO a la herramienta `investigar_huella_creador(handle=...)`.\n"
+                f"   - Con el resultado devuelto por la herramienta, arranca el onboarding con este tono:\n"
+                f"     'Okay, ya escaneé tu Instagram. Vamos a hacer el onboarding: te voy a hacer unas preguntas como para conocerte mejor y arrancar.\\n\\n[Resume en 1-2 oraciones honestas lo que viste en su contenido y proyectos sin adulación vacía].\\n\\n[Lanza la primera pregunta quirúrgica sobre su historia, vivencia o momento de quiebre]'.\n\n"
+                f"3. DIÁLOGO SOCRÁTICO (Las 5 Dimensiones):\n"
+                f"   - Haz UNA sola pregunta a la vez (corta, 20-25 palabras).\n"
+                f"   - Escucha con atención lo que te cuente en audio o texto.\n"
+                f"   - CERO jerga corporativa (nada de 'funnel', 'ICP', '10k seguidores', 'estrategias de marketing').\n"
+                f"   - Descubre su obsesión real, su anécdota de trinchera y el cliché que combate.\n\n"
+                f"4. CIERRE DE ONBOARDING Y PROPUESTA DE GUION:\n"
+                f"   - En cuanto conozcas su verdad y su postura (tras 2 o 3 respuestas):\n"
+                f"   - LLAMA DE INMEDIATO a la herramienta `completar_onboarding_creador(niche=..., obsession=..., common_enemy=..., origin_story=..., voice_vibe=..., target_audience=...)`.\n"
+                f"   - Y en tu respuesta dile exactamente:\n"
+                f"     'Listo, ahora que te conozco y ya te tengo mapeado, sé que eres [síntesis exacta de su mundo y lo que combate]. Hagamos un guion de [tema concreto sugerido a partir de su anécdota] para que veas cómo podemos trabajar. ¿Qué anécdota o detalle clave tienes sobre eso y arrancamos de una?'\n"
             )
         else:
-            context_block += (
-                "REGLA DE CONTEXTO: Habla ÚNICAMENTE desde el lore y nicho real de este creador cargado arriba. "
-                "Bajo NINGUNA circunstancia inventes clientes, empresas o proyectos que no figuren en su contexto.\n"
-                "- Si el creador te saluda de nuevo ('hola', 'hola Rick'): salúdalo de forma natural y cercana de colega ('¡Ey!', '¡Qué más!'), demuestra que tienes fresco su radar creativo y pregúntale qué quieren atacar hoy (guion, inventario de piezas o nueva idea).\n"
+            context_block = (
+                f"### RADIOGRAFÍA Y LORE DEL CREADOR (MULTI-TENANT):\n{lore_md}\n\n"
+                f"### ADN DE VOZ Y POSICIONAMIENTO:\n{voice_dna_md}\n\n{positioning_md}\n\n"
+                f"### MEMORIA ACTIVA Y ESTADO ACTUAL:\n{active_ctx_md}\n\n"
+                f"### GUIONES Y PIEZAS EN LA MESA:\n{recent_scripts_md}\n\n"
+                f"### ESTADO DEL CREADOR: CONSOLIDADO EN EL ESTUDIO (PRODUCCIÓN ACTIVA)\n"
+                f"El creador ya completó su onboarding y su identidad está asentada en el estudio.\n"
+                f"- Habla ÚNICAMENTE desde su lore y nicho real cargado arriba. NUNCA inventes clientes o proyectos ajenos.\n"
+                f"- Si el creador te saluda de nuevo: salúdalo con naturalidad ('¡Ey!', '¡Qué más!') y pregúntale qué quieren atacar hoy.\n"
             )
 
         system_instruction = (

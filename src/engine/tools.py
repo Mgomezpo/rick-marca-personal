@@ -10,6 +10,60 @@ OPENAI_TOOLS: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "investigar_huella_creador",
+            "description": "Investiga la huella digital del creador en Instagram y la web a partir de su handle o link. Analiza su contenido, estilo y proyectos para conocer su contexto real y guardarlo en su perfil.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "handle": {
+                        "type": "string",
+                        "description": "Usuario o handle de Instagram (ej: 'usuario_creador' o '@usuario')"
+                    }
+                },
+                "required": ["handle"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "completar_onboarding_creador",
+            "description": "Finaliza el onboarding socrático del creador tras calibrar sus 5 dimensiones (nicho, obsesión, enemigo común, anécdota/lore, voz y audiencia). Guarda su perfil definitivo en Supabase, marca su onboarding_status como 'completed' en la base de datos y pasa el estudio a modo producción.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "niche": {
+                        "type": "string",
+                        "description": "Nicho o industria principal del creador"
+                    },
+                    "obsession": {
+                        "type": "string",
+                        "description": "Obsesión central o tema recurrente del que hablaría horas sin parar"
+                    },
+                    "common_enemy": {
+                        "type": "string",
+                        "description": "Enemigo común o cliché de su industria que combate"
+                    },
+                    "origin_story": {
+                        "type": "string",
+                        "description": "Anécdota de trinchera o momento de quiebre donde definió su postura"
+                    },
+                    "voice_vibe": {
+                        "type": "string",
+                        "description": "Tono y cadencia natural de su voz"
+                    },
+                    "target_audience": {
+                        "type": "string",
+                        "description": "Audiencia espejo a quien le habla (ej: 'su versión de hace 2 años')"
+                    }
+                },
+                "required": ["niche", "obsession", "common_enemy", "voice_vibe"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "guardar_identidad_creador",
             "description": "Guarda o actualiza la identidad, nicho, obsesión y voz del creador en su base de datos personal cuando se definen o descubren en la conversación.",
             "parameters": {
@@ -224,7 +278,87 @@ def execute_tool_call(
     """Ejecuta una herramienta solicitada por el modelo y retorna el resultado en string."""
     logger.info(f"🛠️ [Tool Exec] {tool_name} para usuario {user_id} con args: {list(args.keys())}")
     try:
-        if tool_name == "guardar_identidad_creador":
+        if tool_name == "investigar_huella_creador":
+            handle_raw = args.get("handle", "")
+            from src.services.instagram import InstagramService
+            ig_service = InstagramService()
+            clean_h = ig_service.clean_handle(handle_raw) or handle_raw.strip().lstrip("@")
+            footprint = ig_service.research_creator_footprint(clean_h)
+            summary = footprint.get("summary", f"Cuenta @{clean_h} identificada.")
+            db.upsert_user_profile(user_id, {
+                "analytics_username": clean_h,
+                "backstory": summary[:500]
+            })
+            return json.dumps({
+                "status": "success",
+                "handle": clean_h,
+                "resumen_huella": summary
+            }, ensure_ascii=False)
+
+        elif tool_name == "completar_onboarding_creador":
+            niche = args.get("niche", "")
+            obsession = args.get("obsession", "")
+            common_enemy = args.get("common_enemy", "")
+            origin_story = args.get("origin_story", "")
+            voice_vibe = args.get("voice_vibe", "")
+            target_audience = args.get("target_audience", "")
+
+            # Guardar brand assets (voz, lore, cliente_ideal)
+            db.upsert_brand_asset(
+                user_id=user_id,
+                slot_type="voz",
+                content={
+                    "vibe": voice_vibe,
+                    "obsession": obsession,
+                    "common_enemy": common_enemy,
+                    "niche": niche
+                },
+                summary=f"Voz: {voice_vibe} | Nicho: {niche}",
+                status="ready"
+            )
+            if origin_story:
+                db.upsert_brand_asset(
+                    user_id=user_id,
+                    slot_type="lore",
+                    content={"origin_story": origin_story, "key_moment": origin_story},
+                    summary=f"Historia de origen: {origin_story[:100]}",
+                    status="ready"
+                )
+            if target_audience:
+                db.upsert_brand_asset(
+                    user_id=user_id,
+                    slot_type="cliente_ideal",
+                    content={"target_audience": target_audience},
+                    summary=f"Audiencia: {target_audience}",
+                    status="ready"
+                )
+
+            # Binario en BD: onboarding_status = 'completed'
+            db.upsert_user_profile(user_id, {
+                "main_niche": niche,
+                "passion": obsession,
+                "unique_angle": common_enemy,
+                "backstory": origin_story[:500] if origin_story else "",
+                "onboarding_status": "completed"
+            })
+
+            # Actualizar memoria activa
+            st = db.get_active_memory(user_id).get("state") or {}
+            st["onboarding_completed"] = True
+            db.update_active_memory(user_id, st, summary=f"Onboarding completado. Nicho: {niche}")
+
+            return json.dumps({
+                "status": "success",
+                "message": "Onboarding completado exitosamente. Creador dado de alta en el estudio.",
+                "profile": {
+                    "niche": niche,
+                    "obsession": obsession,
+                    "common_enemy": common_enemy,
+                    "voice_vibe": voice_vibe
+                }
+            }, ensure_ascii=False)
+
+        elif tool_name == "guardar_identidad_creador":
             niche = args.get("niche", "")
             obsession = args.get("obsession", "")
             common_enemy = args.get("common_enemy", "")

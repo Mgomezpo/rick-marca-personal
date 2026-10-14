@@ -54,6 +54,8 @@ class SkillsLoader:
             logger.error(f"Error cargando skill '{skill_name}': {e}")
             return ""
 
+    get_skill_instructions = get_skill
+
     def get_brain_doc(self, rel_path: str) -> str:
         """
         Obtiene el contenido canónico de un documento del cerebro (brain/*).

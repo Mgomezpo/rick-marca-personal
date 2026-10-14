@@ -20,8 +20,10 @@ def test_services():
 
 def test_tools_schema_valid():
     """Valida que todas las herramientas cumplan el esquema de OpenAI functions."""
-    assert len(OPENAI_TOOLS) >= 9
+    assert len(OPENAI_TOOLS) >= 11
     tool_names = [t["function"]["name"] for t in OPENAI_TOOLS]
+    assert "investigar_huella_creador" in tool_names
+    assert "completar_onboarding_creador" in tool_names
     assert "guardar_identidad_creador" in tool_names
     assert "guardar_guion_terminado" in tool_names
     assert "actualizar_memoria_activa" in tool_names
@@ -31,6 +33,47 @@ def test_tools_schema_valid():
     assert "consultar_perfil_creador" in tool_names
     assert "redactar_guion_formato_oficial" in tool_names
     assert "consultar_posts_instagram" in tool_names
+
+def test_execute_investigar_huella(test_services):
+    """Prueba la herramienta investigar_huella_creador."""
+    db = test_services["db"]
+    vfs = test_services["vfs"]
+    uid = test_services["test_user_id"]
+
+    res = execute_tool_call(
+        tool_name="investigar_huella_creador",
+        args={"handle": "@usuario_test"},
+        user_id=uid,
+        db=db,
+        vfs=vfs
+    )
+    parsed = json.loads(res)
+    assert parsed["status"] == "success"
+    assert "resumen_huella" in parsed
+
+def test_execute_completar_onboarding(test_services):
+    """Prueba la herramienta completar_onboarding_creador que asienta el binario en BD."""
+    db = test_services["db"]
+    vfs = test_services["vfs"]
+    uid = test_services["test_user_id"]
+
+    res = execute_tool_call(
+        tool_name="completar_onboarding_creador",
+        args={
+            "niche": "Automatización con IA para Operaciones",
+            "obsession": "Sistemas simples que devuelven el tiempo",
+            "common_enemy": "Suscripciones inútiles de software inflado",
+            "origin_story": "El día que un cliente gastó $5,000 en apps que nadie abrió",
+            "voice_vibe": "Directo, sobrio y de trinchera",
+            "target_audience": "Fundadores que no tienen tiempo que perder"
+        },
+        user_id=uid,
+        db=db,
+        vfs=vfs
+    )
+    parsed = json.loads(res)
+    assert parsed["status"] == "success"
+    assert "completado exitosamente" in parsed["message"]
 
 def test_execute_guardar_identidad(test_services):
     """Prueba la ejecución directa de la herramienta guardar_identidad_creador."""
