@@ -17,6 +17,7 @@
 # Dependencias y caches
 node_modules/
 .cache/
+.pytest_cache/
 __pycache__/
 *.pyc
 

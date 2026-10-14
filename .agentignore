@@ -1,0 +1,14 @@
+# Agent & AI indexer ignore file
+# Reduce context window bloat and noise for AI coding assistants
+
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.log
+.env
+.git/
+node_modules/
+.venv/
+venv/
+*.tmp

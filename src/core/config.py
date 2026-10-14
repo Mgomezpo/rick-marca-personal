@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     WHATSAPP_PHONE_NUMBER_ID: str = Field(default="")
     WHATSAPP_VERIFY_TOKEN: str = Field(default="rick_secret_verify_token_2026")
     WHATSAPP_API_VERSION: str = Field(default="v20.0")
+    META_APP_SECRET: str = Field(default="")
+    ALLOWED_ORIGINS: list[str] = Field(default=["*"])
 
     # Apify
     APIFY_API_TOKEN: str = Field(default="")
