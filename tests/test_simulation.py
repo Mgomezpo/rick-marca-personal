@@ -75,3 +75,14 @@ def test_chat_simulation_new_user_interview(client):
     assert resp3.status_code == 200
     data3 = resp3.json()
     assert len(data3["reply"]) > 30
+
+    # Turno 4: Creador confirma con 'go'
+    resp4 = client.post("/api/chat-simulation", json={
+        "phone_number": test_phone,
+        "message": "go"
+    })
+    assert resp4.status_code == 200
+    data4 = resp4.json()
+    assert len(data4["reply"]) > 30
+    assert "¿te gustaría" not in data4["reply"].lower()
+    assert "¿quieres que" not in data4["reply"].lower()

@@ -146,14 +146,31 @@ class CreatorInterviewerSubagent:
             "     a) Escucha profunda: Refleja en 1 frase certera el valor y la tensión de lo que acaba de contar.\n"
             "     b) Pregunta Quirúrgica #2: Lanza UNA SOLA pregunta sobre el dogma, cliché o mentira de su industria que más rabia le da y que combate con su trabajo práctico.\n"
             "   - En extracted_profile marca 'inquiry_step': 2.\n\n"
-            "4. ETAPA 4: SÍNTESIS DE ADN Y GRADUACIÓN A PRODUCCIÓN:\n"
-            "   - SE ACTIVA cuando el creador responde la pregunta sobre su enemigo común:\n"
-            "     a) Síntesis de estudio: Refleja en 2-3 frases limpias su verdad de trinchera, su postura y a quién le habla. PROHIBIDO inventar metas numéricas (nada de 'hacia los 10k seguidores' a menos que el creador lo haya pedido), PROHIBIDO inventar calendarios ficticios ('jueves a las 10am', '3 posts por semana') y PROHIBIDO usar jerga técnica innecesaria (nada de 'beats', 'funnels', etc.).\n"
-            "     b) Pase directo a la acción: Proponle aterrizar de inmediato esa verdad en su primer guion oficial a partir de la historia que acaba de compartir.\n"
-            "     c) Cierre natural: '¿Le damos forma al primer guion ahora mismo?'\n"
-            "   - Marca 'is_onboarding_complete': true.\n\n"
+            "4. ETAPA 4: SÍNTESIS DE ADN Y CÓMO VAMOS A TRABAJAR EN ÉL (GRADUACIÓN A PRODUCCIÓN):\n"
+            "   - SE ACTIVA cuando el creador responde la pregunta sobre su enemigo común o visión:\n"
+            "     a) Síntesis de estudio: Refleja en 2 frases limpias su verdad de trinchera, su postura y a quién le habla. PROHIBIDO inventar metas numéricas (nada de 'hacia los 10k seguidores' salvo que el creador lo haya pedido) y PROHIBIDO inventar calendarios ficticios.\n"
+            "     b) Cómo vamos a trabajar en él (Plan ejecutivo directo):\n"
+            "        'Así es como lo vamos a trabajar:\n"
+            "        1. Anclamos el video en una vivencia real de trinchera (cero teoría ni lugares comunes).\n"
+            "        2. Metemos un gancho de quiebre cognitivo que desarme el cliché de la industria.\n"
+            "        3. Te entrego la estructura y los ganchos listo para grabar.'\n"
+            "     c) Directiva ejecutiva inmediata (PROHIBIDO pedir permiso con '¿te gustaría?'):\n"
+            "        'Dime una historia o momento puntual [ej: de tus viajes en Bolivia o Ecuador, o de tu trabajo] donde hayas vivido esto en carne propia —o mándame un audio de 20s contándolo sin filtro— y te armo el guion ya mismo.'\n"
+            "   - Marca OBLIGATORIAMENTE 'is_onboarding_complete': true.\n\n"
+            "5. MANEJO DE AFIRMACIONES ('GO', 'SÍ', 'DALE', 'VAMOS', ETC.):\n"
+            "   - Si el creador confirma ('go', 'sí', 'dale', 'vamos', 'de una', 'hagámoslo', 'ok'):\n"
+            "     a) Marca OBLIGATORIAMENTE 'is_onboarding_complete': true.\n"
+            "     b) PROHIBICIÓN TOTAL DE PREGUNTAS TÍMIDAS DE PERMISO: CERO '¿Te gustaría que empecemos?' o '¿Quieres que exploremos?'.\n"
+            "     c) Asume el mando ejecutivo de inmediato:\n"
+            "        'De una. Así es como lo vamos a trabajar:\n"
+            "        1. Anclamos la pieza en una anécdota real de tus vivencias.\n"
+            "        2. Rompemos el cliché común con un gancho que despierte a la gente.\n"
+            "        3. Te entrego el guion estructurado listo para grabar.\n\n"
+            "        Dime una historia o anécdota puntual donde hayas vivido esto en carne propia [ej: en tus viajes o trabajo] —o mándame un audio de 20s contándolo— y te armo el guion ya mismo.'\n"
+            "        (Si el creador ya te dio la escena concreta, dile que tomas esa escena y le armas el guion con 3 opciones de gancho de alto impacto de inmediato).\n\n"
             "### REGLAS INFLEXIBLES:\n"
             "- NUNCA hagas más de UNA sola pregunta por turno.\n"
+            "- PROHIBICIÓN TOTAL DE PREGUNTAS TÍMIDAS DE PERMISO: NUNCA uses fórmulas como '¿Te gustaría que...?', '¿Te parece si...?', '¿Quieres que exploremos...?'. Eres el Head of Content: con criterio propones el plan y das una instrucción clara y directa ('Dime X para armarte el guion').\n"
             "- NUNCA prometas 'voy a revisar tu perfil y te escribo después' ni 'pronto te haré una pregunta'. El bot ya envió ese acuse de recibo de inmediato al usuario, por lo que este mensaje DEBE entregar directamente la radiografía con lo que encontraste y la pregunta quirúrgica #1.\n"
             "- Cero tono de autoayuda barata o coaching motivacional. Eres un Head of Content de élite en la mesa de estudio con Rick Rubin.\n"
             "- Habla en español natural, cercano, de colega a socio, sin poses corporativas.\n\n"
@@ -183,6 +200,22 @@ class CreatorInterviewerSubagent:
             f"MENSAJE ACTUAL DEL CREADOR:\n\"{user_message}\"\n\n"
             "Genera tu respuesta en JSON."
         )
+
+        # Detección determinista de confirmaciones afirmativas del creador
+        clean_msg = user_message.strip().lower().rstrip(".!,; ")
+        affirmation_words = {
+            "go", "si", "sí", "dale", "vamos", "de una", "deuna", "claro", "hagamoslo", "hagámoslo",
+            "arranquemos", "listo", "ok", "okay", "start", "yes", "yep", "bueno", "darle", "va", "vamos a darle"
+        }
+        is_user_affirmation = clean_msg in affirmation_words or any(clean_msg.startswith(w + " ") for w in ["go", "dale", "vamos", "de una", "hagámoslo", "si", "sí", "ok"])
+
+        if is_user_affirmation and (answers.get("inquiry_step", 0) >= 2 or len(history_messages) >= 4 or active_known.get("obsession")):
+            user_prompt += (
+                "\n\nATENCIÓN: El creador ha enviado una confirmación afirmativa ('go'/'sí'/'dale'/'vamos'). "
+                "La etapa de entrevista está CUMPLIDA. Marca OBLIGATORIAMENTE 'is_onboarding_complete': true. "
+                "PROHIBIDO preguntar si quiere empezar o pedir permiso ('¿Te gustaría...?'). "
+                "Responde como Head of Content ejecutivo: dile cómo van a trabajar en él y pídele directamente la anécdota puntual o escena concreta [ej: en sus viajes o trabajo] en un audio de 20s para armar el guion de inmediato."
+            )
 
         # 4. Inferencia con LLM (OpenAI con fallback automático a Google Gemini)
         reply_text = ""
@@ -225,6 +258,32 @@ class CreatorInterviewerSubagent:
                     is_complete = bool(data.get("is_onboarding_complete", False))
                 except Exception as fb_err:
                     logger.error(f"Error en OpenAI fallback {config.OPENAI_FALLBACK_MODEL}: {fb_err}")
+
+        # Si el usuario envió una afirmación y ya teníamos contexto, asegurar graduación y purgar preguntas tímidas
+        if is_user_affirmation and (answers.get("inquiry_step", 0) >= 2 or len(history_messages) >= 4 or active_known.get("obsession")):
+            is_complete = True
+            timid_patterns = [
+                r"¿te gustaría que empecemos.*?\?",
+                r"¿te gustaría que empezáramos.*?\?",
+                r"¿te gustaría que trabajáramos.*?\?",
+                r"¿te gustaría que exploráramos.*?\?",
+                r"¿te gustaría que le demos.*?\?",
+                r"¿te gustaría.*?\?",
+                r"¿quieres que empecemos.*?\?",
+                r"¿le damos forma al primer guion ahora mismo\??",
+            ]
+            for pat in timid_patterns:
+                reply_text = re.sub(pat, "", reply_text, flags=re.IGNORECASE).strip()
+
+            if not any(k in reply_text.lower() for k in ["cuéntame", "dime", "mándame", "nota de voz", "audio", "armar"]):
+                reply_text += (
+                    "\n\nAsí es como lo vamos a trabajar:\n"
+                    "1. Anclamos la pieza en una anécdota real de tus vivencias (cero teoría ni clichés).\n"
+                    "2. Rompemos el dogma común con un quiebre cognitivo que despierte a la gente.\n"
+                    "3. Te estructuro el guion completo listo para grabar.\n\n"
+                    "Dime una historia o momento puntual [ej: en tus viajes o anécdota de trinchera] donde hayas vivido esto en carne propia "
+                    "—o mándame un audio de 20s contándolo sin filtro— y te armo el guion ya mismo."
+                )
 
         # Fallback de seguridad si ambos LLM fallaron
         if not reply_text:
