@@ -254,7 +254,7 @@ class RickTelegramBot:
         if not transcribed_text and config.GEMINI_API_KEY:
             try:
                 resp = self.gemini_client.models.generate_content(
-                    model=config.ORCHESTRATOR_MODEL,
+                    model="gemini-2.5-flash",
                     contents=[
                         types.Part.from_bytes(data=audio_bytes, mime_type="audio/ogg"),
                         "Transcribe con total exactitud esta nota de voz en español. Devuelve ÚNICAMENTE el texto transcrito."

@@ -19,15 +19,16 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = Field(default="https://khoikdwablpqiapxkgqx.supabase.co")
     SUPABASE_SERVICE_ROLE_KEY: str = Field(default="")
 
-    # Gemini
-    GEMINI_API_KEY: str = Field(default="")
-    ORCHESTRATOR_MODEL: str = Field(default="gemini-2.5-flash-lite")
-    WRITER_MODEL: str = Field(default="gemini-2.5-pro")
-    EMBEDDING_MODEL: str = Field(default="text-embedding-004")
-
-    # OpenAI
+    # OpenAI (Motor Principal de Inteligencia y Conversación)
     OPENAI_API_KEY: str = Field(default="")
     OPENAI_MODEL: str = Field(default="gpt-4o")
+    OPENAI_FALLBACK_MODEL: str = Field(default="gpt-4o-mini")
+
+    # Gemini (Únicamente utilidades secundarias: Google Search Grounding y Embeddings)
+    GEMINI_API_KEY: str = Field(default="")
+    ORCHESTRATOR_MODEL: str = Field(default="gpt-4o")
+    WRITER_MODEL: str = Field(default="gpt-4o")
+    EMBEDDING_MODEL: str = Field(default="text-embedding-004")
 
     # WhatsApp Cloud API
     WHATSAPP_TOKEN: str = Field(default="")

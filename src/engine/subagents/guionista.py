@@ -159,25 +159,20 @@ class GuionistaSubagent:
                 tokens_in = getattr(oa_resp.usage, "prompt_tokens", 150) or 150
                 tokens_out = getattr(oa_resp.usage, "completion_tokens", 250) or 250
             except Exception as e:
-                logger.warning(f"Aviso OpenAI en Guionista ({e}). Probando Gemini...")
-
-        # Fallback Gemini
-        if not raw_script and config.GEMINI_API_KEY:
-            try:
-                resp = self.client.models.generate_content(
-                    model=config.WRITER_MODEL,
-                    contents=user_prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_instruction,
-                        temperature=0.6,
+                logger.warning(f"Aviso OpenAI {config.OPENAI_MODEL} en Guionista ({e}). Probando fallback OpenAI {config.OPENAI_FALLBACK_MODEL}...")
+                try:
+                    oa_resp = oa_client.chat.completions.create(
+                        model=config.OPENAI_FALLBACK_MODEL,
+                        messages=[
+                            {"role": "system", "content": system_instruction},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        temperature=0.6
                     )
-                )
-                raw_script = resp.text.strip()
-                used_model = config.WRITER_MODEL
-                tokens_in = getattr(resp.usage_metadata, "prompt_token_count", 0)
-                tokens_out = getattr(resp.usage_metadata, "candidates_token_count", 0)
-            except Exception as gem_err:
-                logger.error(f"Error Gemini en Guionista: {gem_err}")
+                    raw_script = (oa_resp.choices[0].message.content or "").strip()
+                    used_model = config.OPENAI_FALLBACK_MODEL
+                except Exception as fb_err:
+                    logger.error(f"Error OpenAI fallback en Guionista: {fb_err}")
 
         if not raw_script:
             raise RuntimeError("Ningún proveedor LLM pudo generar el borrador del guion.")

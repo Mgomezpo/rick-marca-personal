@@ -210,30 +210,21 @@ class CreatorInterviewerSubagent:
                 extracted_data = data.get("extracted_profile", {})
                 is_complete = bool(data.get("is_onboarding_complete", False))
             except Exception as e:
-                logger.warning(f"Aviso: OpenAI falló en creator interview ({e}). Fallback a Gemini...")
-
-        if not reply_text and config.GEMINI_API_KEY:
-            try:
-                gem_prompt = "HISTORIAL DE CONVERSACIÓN PREVIO:\n"
-                for hm in history_messages:
-                    gem_prompt += f"{hm['role'].capitalize()}: {hm['content']}\n"
-                gem_prompt += f"\n{user_prompt}"
-
-                resp = self.client.models.generate_content(
-                    model=config.ORCHESTRATOR_MODEL,
-                    contents=gem_prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_instruction,
-                        response_mime_type="application/json",
+                logger.warning(f"Aviso: OpenAI {config.OPENAI_MODEL} falló ({e}). Probando fallback OpenAI {config.OPENAI_FALLBACK_MODEL}...")
+                try:
+                    resp = oa.chat.completions.create(
+                        model=config.OPENAI_FALLBACK_MODEL,
+                        messages=oa_msgs,
+                        response_format={"type": "json_object"},
                         temperature=0.6
                     )
-                )
-                data = json.loads(resp.text)
-                reply_text = data.get("reply", "").strip()
-                extracted_data = data.get("extracted_profile", {})
-                is_complete = bool(data.get("is_onboarding_complete", False))
-            except Exception as e:
-                logger.error(f"Error Gemini en creator interview: {e}")
+                    raw_json = resp.choices[0].message.content or "{}"
+                    data = json.loads(raw_json)
+                    reply_text = data.get("reply", "").strip()
+                    extracted_data = data.get("extracted_profile", {})
+                    is_complete = bool(data.get("is_onboarding_complete", False))
+                except Exception as fb_err:
+                    logger.error(f"Error en OpenAI fallback {config.OPENAI_FALLBACK_MODEL}: {fb_err}")
 
         # Fallback de seguridad si ambos LLM fallaron
         if not reply_text:

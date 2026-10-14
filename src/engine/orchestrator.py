@@ -244,11 +244,18 @@ class RickOrchestrator:
 
                     used_model = config.OPENAI_MODEL
                 except Exception as oa_err:
-                    logger.warning(f"Aviso: OpenAI falló ({oa_err}). Activando fallback en cascada con Google Gemini...")
-
-            # -----------------------------------------------------------------
-            # 2. MOTOR DE FALLBACK: Cascada Google Gemini
-            # -----------------------------------------------------------------
+                    logger.warning(f"Aviso: OpenAI {config.OPENAI_MODEL} falló ({oa_err}). Probando fallback OpenAI {config.OPENAI_FALLBACK_MODEL}...")
+                    try:
+                        oa_resp = oa_client.chat.completions.create(
+                            model=config.OPENAI_FALLBACK_MODEL,
+                            messages=oa_msgs,
+                            temperature=0.5
+                        )
+                        msg = oa_resp.choices[0].message
+                        final_text = (msg.content or "").strip()
+                        used_model = config.OPENAI_FALLBACK_MODEL
+                    except Exception as fb_err:
+                        logger.error(f"Error en OpenAI fallback {config.OPENAI_FALLBACK_MODEL}: {fb_err}")
             if not final_text and config.GEMINI_API_KEY:
                 full_prompt = user_message
                 if history_messages:

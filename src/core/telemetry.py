@@ -7,9 +7,10 @@ logger = logging.getLogger("rick.telemetry")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 # Precios aproximados por millón de tokens (USD)
-# Gemini 2.5 Flash: $0.075 / 1M input, $0.30 / 1M output
-# Gemini 2.5 Pro: $1.25 / 1M input, $5.00 / 1M output
+# Pricing por millón de tokens (USD)
 MODEL_PRICING: Dict[str, Dict[str, float]] = {
+    "gpt-4o": {"input": 2.50 / 1_000_000, "output": 10.00 / 1_000_000},
+    "gpt-4o-mini": {"input": 0.15 / 1_000_000, "output": 0.60 / 1_000_000},
     "gemini-2.5-flash": {"input": 0.075 / 1_000_000, "output": 0.30 / 1_000_000},
     "gemini-2.5-pro": {"input": 1.25 / 1_000_000, "output": 5.00 / 1_000_000},
     "text-embedding-004": {"input": 0.025 / 1_000_000, "output": 0.0},

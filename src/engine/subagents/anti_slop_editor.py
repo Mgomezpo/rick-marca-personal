@@ -122,24 +122,20 @@ class AntiSlopEditor:
                 tokens_in = getattr(resp.usage, "prompt_tokens", 150) or 150
                 tokens_out = getattr(resp.usage, "completion_tokens", 150) or 150
             except Exception as e:
-                logger.warning(f"Aviso OpenAI en Humanizer ({e}). Probando Gemini...")
-
-        if not cleaned and config.GEMINI_API_KEY:
-            try:
-                resp = self.client.models.generate_content(
-                    model=config.ORCHESTRATOR_MODEL,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_instruction,
-                        temperature=0.5,
+                logger.warning(f"Aviso OpenAI {config.OPENAI_MODEL} en Humanizer ({e}). Probando fallback OpenAI {config.OPENAI_FALLBACK_MODEL}...")
+                try:
+                    resp = oa_client.chat.completions.create(
+                        model=config.OPENAI_FALLBACK_MODEL,
+                        messages=[
+                            {"role": "system", "content": system_instruction},
+                            {"role": "user", "content": prompt}
+                        ],
+                        temperature=0.5
                     )
-                )
-                cleaned = resp.text.strip()
-                used_model = config.ORCHESTRATOR_MODEL
-                tokens_in = getattr(resp.usage_metadata, "prompt_token_count", 0)
-                tokens_out = getattr(resp.usage_metadata, "candidates_token_count", 0)
-            except Exception as e:
-                logger.error(f"Error Gemini en Humanizer: {e}")
+                    cleaned = (resp.choices[0].message.content or "").strip()
+                    used_model = config.OPENAI_FALLBACK_MODEL
+                except Exception as fb_err:
+                    logger.error(f"Error OpenAI fallback en Humanizer: {fb_err}")
 
         final_script = cleaned if cleaned else text
         was_clean = len(detected) == 0 and (final_script == text)

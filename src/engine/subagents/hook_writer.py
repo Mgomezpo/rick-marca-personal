@@ -86,24 +86,20 @@ class HookWriterSubagent:
                 tokens_in = getattr(oa_resp.usage, "prompt_tokens", 100) or 100
                 tokens_out = getattr(oa_resp.usage, "completion_tokens", 100) or 100
             except Exception as oa_err:
-                logger.warning(f"Aviso OpenAI en HookWriter ({oa_err}). Probando Gemini...")
-
-        if not hooks_text and config.GEMINI_API_KEY:
-            try:
-                resp = self.client.models.generate_content(
-                    model=config.ORCHESTRATOR_MODEL,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_instruction,
-                        temperature=0.7,
+                logger.warning(f"Aviso OpenAI {config.OPENAI_MODEL} en HookWriter ({oa_err}). Probando fallback OpenAI {config.OPENAI_FALLBACK_MODEL}...")
+                try:
+                    oa_resp = oa_client.chat.completions.create(
+                        model=config.OPENAI_FALLBACK_MODEL,
+                        messages=[
+                            {"role": "system", "content": system_instruction},
+                            {"role": "user", "content": prompt}
+                        ],
+                        temperature=0.7
                     )
-                )
-                hooks_text = resp.text.strip()
-                used_model = config.ORCHESTRATOR_MODEL
-                tokens_in = getattr(resp.usage_metadata, "prompt_token_count", 0)
-                tokens_out = getattr(resp.usage_metadata, "candidates_token_count", 0)
-            except Exception as e:
-                logger.error(f"Error generando ganchos en Gemini: {e}")
+                    hooks_text = (oa_resp.choices[0].message.content or "").strip()
+                    used_model = config.OPENAI_FALLBACK_MODEL
+                except Exception as fb_err:
+                    logger.error(f"Error OpenAI fallback en HookWriter: {fb_err}")
 
         self.telemetry.log_turn(
             phase="writing",
@@ -159,21 +155,19 @@ class HookWriterSubagent:
                 )
                 res_text = (resp.choices[0].message.content or "").strip()
             except Exception as e:
-                logger.warning(f"Aviso OpenAI en hook principal: {e}")
-
-        if not res_text and config.GEMINI_API_KEY:
-            try:
-                resp = self.client.models.generate_content(
-                    model=config.ORCHESTRATOR_MODEL,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_instruction,
-                        temperature=0.6,
+                logger.warning(f"Aviso OpenAI {config.OPENAI_MODEL} en hook principal: {e}. Probando fallback {config.OPENAI_FALLBACK_MODEL}...")
+                try:
+                    resp = oa_client.chat.completions.create(
+                        model=config.OPENAI_FALLBACK_MODEL,
+                        messages=[
+                            {"role": "system", "content": system_instruction},
+                            {"role": "user", "content": prompt}
+                        ],
+                        temperature=0.6
                     )
-                )
-                res_text = resp.text.strip()
-            except Exception as e:
-                logger.error(f"Error Gemini en hook principal: {e}")
+                    res_text = (resp.choices[0].message.content or "").strip()
+                except Exception as fb_err:
+                    logger.error(f"Error OpenAI fallback en hook principal: {fb_err}")
 
         # Extraer JSON
         hook_data = {
