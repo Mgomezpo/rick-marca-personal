@@ -1,0 +1,49 @@
+# =============================================================================
+# .dockerignore — Protección de Seguridad y Optimización de Build
+# =============================================================================
+
+# Secretos y Variables de Entorno (PROTECCIÓN CRÍTICA DE KEYS)
+.env
+.env.*
+*.env
+*.env.local
+!.env.example
+
+# Control de Versiones
+.git
+.gitignore
+
+# Caches y Bytecode de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Entornos Virtuales
+env/
+venv/
+.venv/
+ENV/
+
+# Testing y Cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+
+# Logs y Archivos Temporales
+*.log
+npm-debug.log*
+
+# Metadatos de IDEs y Agentes
+.gemini/
+.agents/
+.vscode/
+.idea/
+.obsidian/
+
+# Sistema Operativo
+.DS_Store
+Thumbs.db
+desktop.ini
