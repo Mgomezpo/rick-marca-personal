@@ -24,7 +24,7 @@ class InstagramService:
             m = re.search(r'instagram\.com/([a-zA-Z0-9._]{1,30})', text)
             if m:
                 return m.group(1).strip(". ")
-        # 2. Si viene con @ (ej: @miguel_gomezpo o 'me equivoqué, es @miguel_gomezpo')
+        # 2. Si viene con @ (ej: @creador_ejemplo o 'me equivoqué, es @creador_ejemplo')
         m = re.search(r'@\s*([a-zA-Z0-9._]{1,30})', text)
         if m:
             h = m.group(1).strip(". ")
@@ -259,9 +259,20 @@ class InstagramService:
                 from google import genai
                 from google.genai import types
                 client = genai.Client(api_key=config.GEMINI_API_KEY)
+                grounding_prompt = (
+                    f"Actúa como un analista de inteligencia de contenido y Head of Content.\n"
+                    f"Investiga a fondo la huella pública del creador con usuario de Instagram/redes '@{handle}'.\n"
+                    f"Busca en Instagram (instagram.com/{handle}), LinkedIn, web personal y proyectos asociados:\n"
+                    f"1. Quién es, ciudad/país, proyectos y empresas que ha fundado o lidera (ej. startups, agencias, apps).\n"
+                    f"2. Su trayectoria previa o background técnico/profesional (roles, industrias, marketing, consultoría, etc.).\n"
+                    f"3. Su posicionamiento o ángulo central (cómo se define, 'AI bro no técnico', 'AI sin muchas vueltas', etc.).\n"
+                    f"4. Temas principales de su contenido, reels o publicaciones destacadas, y qué casos de éxito, automatizaciones o historias de trinchera ha compartido.\n"
+                    f"5. Diagnóstico inicial de contenido: qué le funciona mejor (pruebas tangibles, ROI, historias) vs qué le falta o qué contenido se siente más genérico.\n"
+                    f"Entrega un informe directo, conciso y repleto de hechos concretos sin inventar nada."
+                )
                 resp = client.models.generate_content(
                     model="gemini-2.5-flash-lite",
-                    contents=f"Investiga el perfil público de Instagram @{handle}, su biografía, proyectos, empresas y temas que trata.",
+                    contents=grounding_prompt,
                     config=types.GenerateContentConfig(tools=[types.Tool(google_search=types.GoogleSearch())])
                 )
                 grounded_text = (resp.text or "").strip()

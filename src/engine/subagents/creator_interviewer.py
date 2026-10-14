@@ -52,18 +52,60 @@ class CreatorInterviewerSubagent:
             state["inquiry_answers"] = {}
         answers = state["inquiry_answers"]
 
+        # 0. DETECCIÓN E INVESTIGACIÓN ACTIVA DE HUELLA DIGITAL
+        detected_handle = self.instagram.extract_handle(user_message)
+        if not detected_handle:
+            # Si el usuario solo escribió su usuario directo (ej: 'miguel_gomezpo')
+            first_word = user_message.strip().split()[0].lstrip("@,;:. ") if user_message.strip() else ""
+            if len(first_word) >= 3 and re.match(r'^[a-zA-Z0-9._]{3,30}$', first_word) and first_word.lower() not in ["start", "reset", "help", "hola", "si", "no", "bien", "ok", "dale", "gracias"]:
+                detected_handle = first_word
+
+        current_handle = detected_handle or answers.get("instagram_handle")
+        if not current_handle:
+            user_profile = self.db.get_user_profile(user_id) or {}
+            current_handle = user_profile.get("analytics_username")
+
+        # Si tenemos handle pero aún no se ha investigado su huella digital:
+        if current_handle and not answers.get("footprint_summary"):
+            logger.info(f"🔍 [CreatorInterviewer] Investigando huella digital de @{current_handle} antes de responder...")
+            footprint = self.instagram.research_creator_footprint(current_handle)
+            if footprint.get("summary"):
+                answers["footprint_summary"] = footprint["summary"]
+                answers["instagram_handle"] = current_handle
+                self.db.upsert_user_profile(user_id, {
+                    "analytics_username": current_handle,
+                    "backstory": footprint["summary"][:500]
+                })
+
+        # PRIMER CONTACTO (Estilo Stanley / Head of Content):
+        # Si aún no tenemos redes registradas ni investigación de huella, presentarse con autoridad ejecutiva
+        if not current_handle and not answers.get("footprint_summary"):
+            welcome_reply = (
+                "¡Ey! Soy RICK, tu nuevo Head of Content. Hago crecer tu audiencia estudiando lo que publicas y haciendo el trabajo real 📈\n\n"
+                "Tu prueba corre por mi cuenta. Después acordamos juntos qué quieres que maneje y cuánto vale eso.\n\n"
+                "¿Cuáles son tus redes? Déjame ver qué has estado haciendo 📲"
+            )
+            answers["inquiry_step"] = 0
+            state["inquiry_answers"] = answers
+            try:
+                self.db.update_active_memory(user_id, state=state)
+            except Exception as e:
+                logger.warning(f"Aviso actualizando memoria activa en primer contacto: {e}")
+            return welcome_reply, False
+
         # 1. Cargar contexto acumulado previo del perfil y memoria viva
         user_profile = self.db.get_user_profile(user_id) or {}
         known_context = {
             "instagram_handle": answers.get("instagram_handle") or user_profile.get("analytics_username"),
+            "footprint_investigation": answers.get("footprint_summary"),
+            "inquiry_step": answers.get("inquiry_step", 0),
             "obsession": answers.get("obsession") or user_profile.get("passion"),
             "common_enemy": answers.get("common_enemy") or user_profile.get("unique_angle"),
             "origin_story": answers.get("origin_story"),
             "voice_tone": answers.get("voice_tone"),
             "target_audience": answers.get("target_audience") or user_profile.get("target_audience"),
         }
-        # Filtrar solo campos que tengan valor real
-        active_known = {k: v for k, v in known_context.items() if v and str(v).lower() not in ["null", "none"]}
+        active_known = {k: v for k, v in known_context.items() if v is not None and str(v).lower() not in ["null", "none"]}
 
         # 2. Cargar historial de conversación reciente del hilo (hasta 15 mensajes)
         history_messages: List[Dict[str, str]] = []
@@ -87,28 +129,53 @@ class CreatorInterviewerSubagent:
 
         system_instruction = (
             "Eres RICK, productor creativo y Head of Content en la mesa de estudio (inspirado en Rick Rubin y The Creative Act).\n"
-            "Tu misión es descubrir quién es este creador mediante una conversación socrática orgánica, honesta y de tú a tú.\n\n"
-            "### METODOLOGÍA OFICIAL (CREATOR-INTERVIEW):\n"
+            "Tu misión es descubrir quién es este creador, ganarte su respeto con criterio ejecutivo y calibrar su cerebro y su voz real.\n\n"
+            "### METODOLOGÍA OFICIAL (CREATOR-INTERVIEW — EL MÉTODO RUBIN):\n"
             f"{skill_doc}\n\n"
-            "### DIMENSIONES CLAVE A SINTONIZAR (DE FORMA ORGÁNICA, NUNCA COMO UN FORMULARIO):\n"
-            "1. Instagram / Terreno actual: Su cuenta de Instagram (@usuario) o lo que está construyendo hoy.\n"
-            "2. La Obsesión Central: De qué tema o proyecto podría hablar 3 horas seguidas con un café sin cansarse y sin mirar notas.\n"
-            "3. El Enemigo Común / Quiebre Cognitivo: Qué mentira, dogma o cliché de su industria le da rabia y quiere desarmar.\n"
-            "4. El Lore / La Escena de Origen: La escena concreta, llamada o error de trinchera donde sintió esa fricción.\n"
-            "5. El ADN de Voz: Cómo habla cuando le explica algo a un socio tomando un café (sin poses de gurú ni jerga corporativa).\n"
-            "6. La Audiencia Espejo: A quién le habla con exactitud (casi siempre su versión de hace 1 o 2 años).\n\n"
-            "### REGLAS INFLEXIBLES DE CONVERSACIÓN:\n"
-            "1. UNA SOLA PREGUNTA A LA VEZ: Haz ÚNICAMENTE una sola pregunta sugerente, directa y corta (~15-25 palabras).\n"
-            "2. ESCUCHA PROFUNDA: Abre SIEMPRE reflejando en 1 frase certera lo que el creador acaba de contarte antes de soltar la siguiente pregunta.\n"
-            "3. CONVERSACIÓN VIVA E INTELIGENTE: Si el creador comete un typo, aclara una duda, dice 'me equivoqué, es @...', bromea o cuenta una anécdota, acéptalo con total naturalidad humana. NUNCA tomes frases de corrección o errores como si fueran su pasión o proyecto.\n"
-            "4. PRIMER CONTACTO: Si el creador apenas entra al estudio o no ha dicho nada aún, dale la bienvenida al estudio en 2 frases y pídele su Instagram (@usuario) o una nota de voz sobre lo que está construyendo.\n"
-            "5. CIERRE Y GRADUACIÓN: Cuando hayas cubierto con profundidad real las dimensiones clave (Obsesión, Enemigo Común, Escena/Lore y Audiencia), haz el cierre de estudio al estilo Rubin resumiendo su ADN en 3 puntos contundentes, invítalo a producir su primer guion oficial y marca 'is_onboarding_complete': true.\n\n"
+            "### LAS 4 ETAPAS DEL FLUJO DE ESTUDIO:\n"
+            "1. ETAPA 1: PRIMER CONTACTO (Si no hay Instagram ni huella digital aún en 'footprint_investigation'):\n"
+            "   - Si el creador apenas entra, saluda con /start o aún no ha dado sus redes:\n"
+            "   - Salúdalo como su nuevo Head of Content en 2 frases directas, con energía de estudio.\n"
+            "   - Pídele su cuenta de Instagram (@usuario) o web para ver qué ha estado haciendo.\n"
+            "   - Ejemplo: '¡Ey! Soy RICK, tu nuevo Head of Content. Hago crecer tu audiencia estudiando lo que publicas y haciendo el trabajo real de trinchera 📈 ¿Cuáles son tus redes o web? Pásame tu @ de Instagram para ver qué has estado haciendo 📲'\n\n"
+            "2. ETAPA 2: RADIOGRAFÍA DE AUTORIDAD + PREGUNTA QUIRÚRGICA #1 (ENTRE EL DIAGNÓSTICO Y LA ESTRATEGIA):\n"
+            "   - SE ACTIVA cuando ya se tiene la investigación de su huella ('footprint_investigation') y 'inquiry_step' es 0 o aún no se ha indagado en su anécdota real.\n"
+            "   - Estructura OBLIGATORIA de tu respuesta en este turno:\n"
+            "     a) Radiografía de Autoridad: Resume quién es, ciudad/país, proyectos (ej: ireal.app), trayectoria (ej: data science/marketing) y su posicionamiento ('AI bro no técnico'). Demuestra que hiciste la tarea a fondo con hechos reales sin inventar.\n"
+            "     b) Diagnóstico Crítico: Resalta lo que mejor le funciona (pruebas de trinchera, automatizaciones reales, métricas de negocio) vs lo que le falta a su feed (demasiado consejo genérico de herramientas).\n"
+            "     c) El Puente hacia su verdad: Explícale que tienes la foto por fuera, pero para calibrar su cerebro y capturar su voz real en el estudio (sin frases acartonadas de IA), necesitas indagar en su material en bruto.\n"
+            "     d) PREGUNTA QUIRÚRGICA #1: Lanza UNA SOLA pregunta viva, concreta y humana sobre alguna de las automatizaciones o historias reales descubiertas en su huella (ej: la anécdota del consultorio de su papá o un caso con un cliente). Invítalo a responder en audio o texto sin filtro.\n"
+            "   - En extracted_profile marca 'inquiry_step': 1.\n\n"
+            "3. ETAPA 3: ESCUCHA PROFUNDA + PREGUNTA QUIRÚRGICA #2 (LORE Y ENEMIGO COMÚN):\n"
+            "   - SE ACTIVA cuando el creador responde a la pregunta #1 compartiendo su anécdota o historia.\n"
+            "   - Abre reflejando en 1 frase certera de escucha profunda la esencia de lo que te contó (¡eso es oro puro!).\n"
+            "   - Extrae de su respuesta su historia de origen ('origin_story') y su tono ('voice_tone').\n"
+            "   - Haz UNA SOLA segunda pregunta enfocada en su Quiebre Cognitivo / Enemigo Común: ¿cuál es la mayor mentira, cliché o dogma de su industria que más rabia le da y que desmiente con esa práctica?\n"
+            "   - En extracted_profile marca 'inquiry_step': 2.\n\n"
+            "4. ETAPA 4: CONSOLIDACIÓN, PLAN A 10K Y GRADUACIÓN AL ESTUDIO:\n"
+            "   - SE ACTIVA cuando el creador responde la pregunta sobre su enemigo común o ya se tiene claridad de su voz y verdad de trinchera.\n"
+            "   - Resume su ADN en 3 puntos contundentes.\n"
+            "   - Presenta la estrategia hacia los 10k seguidores:\n"
+            "     1) Desglose de casos reales y automatizaciones (mostrar prompt + workflow + resultado).\n"
+            "     2) 3 posts por semana para activar el algoritmo.\n"
+            "     3) Bloque reservado: Jueves a las 10:00 am para el primer post anclado en la historia que acaba de compartir.\n"
+            "   - Cierra con la invitación directa a escribir: '¿Arrancamos a estructurar los beats del primero ya?'\n"
+            "   - Marca 'is_onboarding_complete': true.\n\n"
+            "### REGLAS INFLEXIBLES:\n"
+            "- NUNCA hagas más de UNA sola pregunta por turno.\n"
+            "- Cero tono de autoayuda barata o coaching motivacional. Eres un Head of Content de élite en la mesa de estudio con Rick Rubin.\n"
+            "- Habla en español natural, cercano, de colega a socio, sin poses corporativas.\n\n"
+            "### REGLAS DE EXTRACCIÓN (OBLIGATORIAS EN EL JSON):\n"
+            "- Si el creador comparte una anécdota, escena o vivencia real (como la automatización de su papá, un cliente, etc.), sintetízala OBLIGATORIAMENTE en 'origin_story'.\n"
+            "- Si el creador menciona la mentira, cliché o dogma que combate, sintetízala OBLIGATORIAMENTE en 'common_enemy'.\n"
+            "- Si el creador habla de su enfoque o estilo, sintetízalo en 'voice_tone'.\n\n"
             "### FORMATO DE SALIDA:\n"
             "Debes responder EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura:\n"
             "{\n"
             "  \"reply\": \"Tu mensaje directo al creador en primera persona\",\n"
             "  \"extracted_profile\": {\n"
             "    \"instagram_handle\": \"handle sin @ si fue mencionado o corregido, o null\",\n"
+            "    \"inquiry_step\": 1,\n"
             "    \"obsession\": \"síntesis de su tema u obsesión central o null\",\n"
             "    \"common_enemy\": \"síntesis del dogma o mentira que combate o null\",\n"
             "    \"origin_story\": \"síntesis de la escena de trinchera o error clave o null\",\n"
@@ -182,19 +249,20 @@ class CreatorInterviewerSubagent:
 
         # 5. Persistencia y actualización orgánica en Supabase
         if extracted_data and isinstance(extracted_data, dict):
+            # Step
+            if "inquiry_step" in extracted_data and extracted_data["inquiry_step"] is not None:
+                try:
+                    answers["inquiry_step"] = int(extracted_data["inquiry_step"])
+                except Exception:
+                    pass
+
             # A. Instagram Handle
             raw_h = extracted_data.get("instagram_handle")
             if raw_h and isinstance(raw_h, str):
                 clean_h = raw_h.strip().lstrip("@,;:. ")
                 if clean_h and clean_h.lower() not in ["null", "none"]:
-                    old_h = answers.get("instagram_handle")
                     answers["instagram_handle"] = clean_h
                     self.db.upsert_user_profile(user_id, {"analytics_username": clean_h})
-                    if clean_h != old_h:
-                        try:
-                            self.instagram.research_creator_footprint(clean_h)
-                        except Exception as e:
-                            logger.warning(f"Aviso investigando huella de @{clean_h}: {e}")
 
             # B. Obsesión Central
             obs = extracted_data.get("obsession")
@@ -206,7 +274,10 @@ class CreatorInterviewerSubagent:
             enemy = extracted_data.get("common_enemy")
             if enemy and isinstance(enemy, str) and enemy.strip().lower() not in ["null", "none"]:
                 answers["common_enemy"] = enemy.strip()
-                self.db.upsert_user_profile(user_id, {"unique_angle": enemy.strip()[:200]})
+                self.db.upsert_user_profile(user_id, {
+                    "unique_angle": enemy.strip()[:200],
+                    "why": enemy.strip()[:200]
+                })
 
             # D. Lore / Escena de Origen
             lore = extracted_data.get("origin_story")
@@ -219,6 +290,14 @@ class CreatorInterviewerSubagent:
                     summary=f"Escena de trinchera: {lore.strip()[:100]}...",
                     status="ready"
                 )
+                self.db.upsert_brand_asset(
+                    user_id=user_id,
+                    slot_type="lore",
+                    content={"origin_story": lore.strip()},
+                    summary=f"Escena de trinchera: {lore.strip()[:100]}...",
+                    status="ready"
+                )
+                self.db.upsert_user_profile(user_id, {"backstory": lore.strip()[:500]})
 
             # E. ADN de Voz
             voice = extracted_data.get("voice_tone")
@@ -249,7 +328,7 @@ class CreatorInterviewerSubagent:
         if is_complete:
             self.db.upsert_user_profile(user_id, {
                 "onboarding_status": "completed",
-                "main_niche": answers.get("obsession", "Creador y Estratega")[:100],
+                "main_niche": answers.get("obsession", "Creador y Estratega de IA")[:100],
                 "unique_angle": answers.get("common_enemy", "Práctica de trinchera vs teoría")[:200]
             })
             state["onboarding_completed"] = True
@@ -257,14 +336,14 @@ class CreatorInterviewerSubagent:
             self.db.update_active_memory(
                 user_id=user_id,
                 state=state,
-                summary="Onboarding socrático completado por LLM. ADN del creador asentado en Supabase."
+                summary="Onboarding y calibración completados. Radiografía y ADN del creador asentados en Supabase."
             )
         else:
             state["onboarding_completed"] = False
             self.db.update_active_memory(
                 user_id=user_id,
                 state=state,
-                summary="Entrevista socrática con el creador en curso."
+                summary="Entrevista y calibración con el creador en curso."
             )
 
         return reply_text, is_complete

@@ -94,7 +94,7 @@ class RickOrchestrator:
         has_voice = bool(voice_dna_md and "sin voz registrada" not in voice_dna_md.lower() and "[pendiente_de_entrevista]" not in voice_dna_md.lower() and len(voice_dna_md.strip()) > 20)
         has_niche = bool(positioning_md and "sin nicho registrado" not in positioning_md.lower() and "[pendiente_de_entrevista]" not in positioning_md.lower() and len(positioning_md.strip()) > 20)
         profile = self.db.get_user_profile(user_id) or {}
-        is_onboarded = onboarding_completed or (profile.get("onboarding_status") == "completed") or (has_voice and has_niche)
+        is_onboarded = bool(onboarding_completed or (profile.get("onboarding_status") == "completed"))
 
         # 2. ENRUTAMIENTO SOCRÁTICO DE ONBOARDING (skills/creator-interview)
         if not is_onboarded:

@@ -127,7 +127,7 @@ class RickTelegramBot:
         task = loop.run_in_executor(
             None,
             self.orchestrator.process_message,
-            "Hola Rick, acabo de entrar al estudio.",
+            "/start",
             user_id,
             "telegram",
             thread_id
