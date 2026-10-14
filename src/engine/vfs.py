@@ -25,6 +25,21 @@ class VirtualFileSystem:
             p = p[1:]
         return p
 
+    def _safe_resolve(self, base_dir: Path, subpath: str) -> Optional[Path]:
+        """
+        Garantiza que la ruta resuelta permanezca estrictamente dentro del directorio base
+        autorizado, bloqueando ataques de Path Traversal (../, symlinks, null-bytes).
+        """
+        if ".." in subpath or "\x00" in subpath:
+            return None
+        try:
+            target = (base_dir / subpath).resolve()
+            if target.is_relative_to(base_dir.resolve()):
+                return target
+        except Exception:
+            pass
+        return None
+
     # -------------------------------------------------------------------------
     # LISTAR CARPETA
     # -------------------------------------------------------------------------
@@ -44,23 +59,23 @@ class VirtualFileSystem:
 
         # 1. Zonas Estáticas (Repo)
         if p.startswith("filosofia"):
-            sub = p.replace("filosofia", "").strip("/")
-            target = self.brain_dir / "01_philosophy" / sub
-            if target.exists() and target.is_dir():
+            sub = p.replace("filosofia", "", 1).strip("/")
+            target = self._safe_resolve(self.brain_dir / "01_philosophy", sub)
+            if target and target.exists() and target.is_dir():
                 return [f.name + ("/" if f.is_dir() else "") for f in target.iterdir() if not f.name.startswith(".")]
             return []
 
         if p.startswith("studio"):
-            sub = p.replace("studio", "").strip("/")
-            target = self.brain_dir / "03_studio" / sub
-            if target.exists() and target.is_dir():
+            sub = p.replace("studio", "", 1).strip("/")
+            target = self._safe_resolve(self.brain_dir / "03_studio", sub)
+            if target and target.exists() and target.is_dir():
                 return [f.name + ("/" if f.is_dir() else "") for f in target.iterdir() if not f.name.startswith(".")]
             return []
 
         if p.startswith("skills"):
-            sub = p.replace("skills", "").strip("/")
-            target = self.skills_dir / sub
-            if target.exists() and target.is_dir():
+            sub = p.replace("skills", "", 1).strip("/")
+            target = self._safe_resolve(self.skills_dir, sub)
+            if target and target.exists() and target.is_dir():
                 return [f.name + ("/" if f.is_dir() else "") for f in target.iterdir() if not f.name.startswith(".")]
             return []
 
@@ -94,25 +109,25 @@ class VirtualFileSystem:
 
         # 1. Zonas Estáticas (Repo)
         if p.startswith("filosofia"):
-            sub = p.replace("filosofia", "").strip("/")
-            target = self.brain_dir / "01_philosophy" / sub
-            if target.exists() and target.is_file():
+            sub = p.replace("filosofia", "", 1).strip("/")
+            target = self._safe_resolve(self.brain_dir / "01_philosophy", sub)
+            if target and target.exists() and target.is_file():
                 return target.read_text(encoding="utf-8")
-            return f"[Error: Archivo {virtual_path} no encontrado en filosofia]"
+            return f"[Error: Archivo {virtual_path} no encontrado o ruta no autorizada en filosofia]"
 
         if p.startswith("studio"):
-            sub = p.replace("studio", "").strip("/")
-            target = self.brain_dir / "03_studio" / sub
-            if target.exists() and target.is_file():
+            sub = p.replace("studio", "", 1).strip("/")
+            target = self._safe_resolve(self.brain_dir / "03_studio", sub)
+            if target and target.exists() and target.is_file():
                 return target.read_text(encoding="utf-8")
-            return f"[Error: Archivo {virtual_path} no encontrado en studio]"
+            return f"[Error: Archivo {virtual_path} no encontrado o ruta no autorizada en studio]"
 
         if p.startswith("skills"):
-            sub = p.replace("skills", "").strip("/")
-            target = self.skills_dir / sub
-            if target.exists() and target.is_file():
+            sub = p.replace("skills", "", 1).strip("/")
+            target = self._safe_resolve(self.skills_dir, sub)
+            if target and target.exists() and target.is_file():
                 return target.read_text(encoding="utf-8")
-            return f"[Error: Archivo {virtual_path} no encontrado en skills]"
+            return f"[Error: Archivo {virtual_path} no encontrado o ruta no autorizada en skills]"
 
         # 2. Zonas Dinámicas Multitenant (Supabase)
         if "voice_dna" in p or "voice-dna" in p or "voz" in p:

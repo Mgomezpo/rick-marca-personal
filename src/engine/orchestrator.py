@@ -8,6 +8,8 @@ from google.genai import types
 
 from src.core.config import config
 from src.core.telemetry import TelemetryTracker
+from src.core.observability import set_request_context, get_correlation_id, get_entry_point, log_event
+from src.core.metrics import metrics_tracker
 from src.db.supabase import DatabaseService
 from src.engine.vfs import VirtualFileSystem
 from src.engine.tools import OPENAI_TOOLS, execute_tool_call
@@ -59,13 +61,21 @@ class RickOrchestrator:
         self.telemetry = TelemetryTracker(self.db.client)
         self.vfs = VirtualFileSystem(self.db)
         self.base_system_prompt = load_master_system_prompt()
+        self.oa_client = None
+        if config.OPENAI_API_KEY:
+            try:
+                import openai
+                self.oa_client = openai.OpenAI(api_key=config.OPENAI_API_KEY)
+            except Exception as e:
+                logger.warning(f"Error inicializando cliente OpenAI en RickOrchestrator: {e}")
 
     def process_message(
         self,
         user_message: str,
         user_id: str,
         channel: str = "whatsapp",
-        thread_id: Optional[str] = None
+        thread_id: Optional[str] = None,
+        correlation_id: Optional[str] = None,
     ) -> str:
         """
         Ejecuta el ciclo de RICK como Head of Content:
@@ -75,8 +85,18 @@ class RickOrchestrator:
           con pipeline de guiones (redactar_guion_formato_oficial) y memoria viva.
         Todo fluye a través del motor unificado de Function Calling de OpenAI (con fallback a Gemini).
         """
+        if correlation_id:
+            set_request_context(correlation_id=correlation_id, entry_point=channel, user_id=user_id)
         start_time = time.time()
-        logger.info(f"🎙️ [RICK Orchestrator] Mensaje de usuario {user_id}: '{user_message[:60]}...'")
+        log_event(
+            logger,
+            logging.INFO,
+            event="orchestrator_turn_started",
+            message=f"🎙️ [RICK Orchestrator] Mensaje de usuario {user_id}: '{user_message[:60]}...'",
+            channel=channel,
+            user_id=user_id,
+            thread_id=thread_id or ""
+        )
 
         # 1. Estado de memoria y perfil en BD
         profile = self.db.get_user_profile(user_id) or {}
@@ -188,11 +208,10 @@ class RickOrchestrator:
             # -----------------------------------------------------------------
             # 1. MOTOR PRINCIPAL: OpenAI con Function Calling real
             # -----------------------------------------------------------------
-            if config.OPENAI_API_KEY:
+            if config.OPENAI_API_KEY and self.oa_client:
                 try:
                     logger.info(f"⚡ [Orchestrator] Ejecutando OpenAI {config.OPENAI_MODEL} con tools...")
-                    import openai
-                    oa_client = openai.OpenAI(api_key=config.OPENAI_API_KEY)
+                    oa_client = self.oa_client
                     oa_msgs = [{"role": "system", "content": system_instruction}]
                     for hm in history_messages:
                         oa_msgs.append({"role": hm["role"], "content": hm["content"]})
@@ -222,6 +241,7 @@ class RickOrchestrator:
                                     fn_args = json.loads(tc.function.arguments) if tc.function.arguments else {}
                                 except Exception:
                                     fn_args = {}
+                                tool_start = time.time()
                                 tool_result = execute_tool_call(
                                     tool_name=fn_name,
                                     args=fn_args,
@@ -229,6 +249,17 @@ class RickOrchestrator:
                                     db=self.db,
                                     vfs=self.vfs,
                                     thread_id=thread_id
+                                )
+                                tool_dur = int((time.time() - tool_start) * 1000)
+                                metrics_tracker.record_tool_call(fn_name, tool_dur)
+                                log_event(
+                                    logger,
+                                    logging.INFO,
+                                    event="tool_execution_completed",
+                                    message=f"Tool {fn_name} ejecutada en {tool_dur}ms",
+                                    tool_name=fn_name,
+                                    duration_ms=tool_dur,
+                                    user_id=user_id
                                 )
                                 oa_msgs.append({
                                     "role": "tool",
@@ -307,11 +338,50 @@ class RickOrchestrator:
                 latency_ms=latency,
                 user_id=user_id,
                 thread_id=thread_id,
+                channel=channel,
+                status="success"
+            )
+
+            log_event(
+                logger,
+                logging.INFO,
+                event="orchestrator_turn_completed",
+                message=f"Turno completado con {used_model} en {latency}ms",
+                model=used_model,
+                latency_ms=latency,
+                user_id=user_id,
                 channel=channel
             )
 
             return final_text
 
         except Exception as e:
-            logger.error(f"Error en RICK Orchestrator: {e}", exc_info=True)
+            latency = int((time.time() - start_time) * 1000)
+            log_event(
+                logger,
+                logging.ERROR,
+                event="orchestrator_turn_failed",
+                message=f"Error en RICK Orchestrator: {e}",
+                error_type=type(e).__name__,
+                error_message=str(e),
+                latency_ms=latency,
+                user_id=user_id,
+                channel=channel
+            )
+            try:
+                self.telemetry.log_turn(
+                    phase="routing",
+                    model_name=used_model if 'used_model' in locals() else "unknown",
+                    prompt_tokens=tokens_in if 'tokens_in' in locals() else 0,
+                    completion_tokens=tokens_out if 'tokens_out' in locals() else 0,
+                    latency_ms=latency,
+                    user_id=user_id,
+                    thread_id=thread_id,
+                    channel=channel,
+                    status="error",
+                    error_type=type(e).__name__,
+                    error_message=str(e)
+                )
+            except Exception:
+                pass
             return "Siento una ligera interferencia en la mesa. Cuéntame de nuevo qué idea tienes y la aterrizamos juntos."

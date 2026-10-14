@@ -7,6 +7,20 @@ from src.core.config import config
 
 logger = logging.getLogger("rick.service.whatsapp")
 
+def format_whatsapp_text(text: str) -> str:
+    """
+    Adapta formato Markdown a WhatsApp:
+    - Transforma **negrita** a *negrita* (WhatsApp usa un solo asterisco para negrita)
+    - Remueve encabezados ### y líneas divisorias ---
+    """
+    import re
+    cleaned = re.sub(r'^[-\*_]{3,}\s*$', '', text, flags=re.MULTILINE)
+    cleaned = re.sub(r'^(#{1,6})\s+(.+)$', r'*\2*', cleaned, flags=re.MULTILINE)
+    cleaned = re.sub(r'\*\*(.+?)\*\*', r'*\1*', cleaned)
+    cleaned = re.sub(r'^\s*[\*\-]\s+', '• ', cleaned, flags=re.MULTILINE)
+    cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
+    return cleaned
+
 class WhatsAppClient:
     """
     Cliente para la API de Meta WhatsApp Cloud.
@@ -34,6 +48,8 @@ class WhatsAppClient:
         Divide textos largos (ej. guiones de 5 actos) en bloques legibles para WhatsApp,
         respetando párrafos y encabezados para no cortar a mitad de una frase.
         """
+        if not text:
+            return []
         if len(text) <= max_chars:
             return [text]
 
@@ -42,6 +58,22 @@ class WhatsAppClient:
         current_chunk = ""
 
         for p in paragraphs:
+            # Si un párrafo individual excede max_chars, trocearlo de forma segura
+            while len(p) > max_chars:
+                if current_chunk:
+                    chunks.append(current_chunk)
+                    current_chunk = ""
+                split_idx = p.rfind("\n", 0, max_chars)
+                if split_idx == -1 or split_idx < max_chars // 2:
+                    split_idx = p.rfind(" ", 0, max_chars)
+                if split_idx == -1 or split_idx < max_chars // 2:
+                    split_idx = max_chars
+                chunks.append(p[:split_idx].strip())
+                p = p[split_idx:].strip()
+
+            if not p:
+                continue
+
             if len(current_chunk) + len(p) + 2 <= max_chars:
                 current_chunk += (("\n\n" if current_chunk else "") + p)
             else:
@@ -53,20 +85,6 @@ class WhatsAppClient:
             chunks.append(current_chunk)
 
         return chunks
-
-def format_whatsapp_text(text: str) -> str:
-    """
-    Adapta formato Markdown a WhatsApp:
-    - Transforma **negrita** a *negrita* (WhatsApp usa un solo asterisco para negrita)
-    - Remueve encabezados ### y líneas divisorias ---
-    """
-    import re
-    cleaned = re.sub(r'^[-\*_]{3,}\s*$', '', text, flags=re.MULTILINE)
-    cleaned = re.sub(r'^(#{1,6})\s+(.+)$', r'*\2*', cleaned, flags=re.MULTILINE)
-    cleaned = re.sub(r'\*\*(.+?)\*\*', r'*\1*', cleaned)
-    cleaned = re.sub(r'^\s*[\*\-]\s+', '• ', cleaned, flags=re.MULTILINE)
-    cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
-    return cleaned
 
     # -------------------------------------------------------------------------
     # 2. Envío de Mensajes de Texto
@@ -125,7 +143,34 @@ def format_whatsapp_text(text: str) -> str:
             return False
 
     # -------------------------------------------------------------------------
-    # 4. Transcripción de Notas de Voz (Gemini Multimodal)
+    # 4. Descarga de Media (Audio / Notas de Voz)
+    # -------------------------------------------------------------------------
+    def download_media_bytes(self, media_id: str) -> Optional[bytes]:
+        """
+        Descarga los bytes de un archivo multimedia (ej. audio) desde Meta Graph API.
+        """
+        if not self.token or "PLACEHOLDER" in self.token:
+            return None
+        try:
+            with httpx.Client(timeout=15.0) as http:
+                url_resp = http.get(f"https://graph.facebook.com/{self.api_version}/{media_id}", headers=self._headers())
+                if url_resp.status_code != 200:
+                    logger.error(f"Error obteniendo URL de audio de Meta: {url_resp.status_code} - {url_resp.text}")
+                    return None
+                media_url = url_resp.json().get("url")
+                if not media_url:
+                    return None
+                download_resp = http.get(media_url, headers=self._headers())
+                if download_resp.status_code == 200:
+                    return download_resp.content
+                logger.error(f"Error descargando bytes de audio desde Meta: {download_resp.status_code}")
+                return None
+        except Exception as e:
+            logger.error(f"Error descargando audio de WhatsApp: {e}")
+            return None
+
+    # -------------------------------------------------------------------------
+    # 5. Transcripción de Notas de Voz (Gemini Multimodal)
     # -------------------------------------------------------------------------
     def transcribe_audio_bytes(self, audio_data: bytes, mime_type: str = "audio/ogg") -> str:
         """
