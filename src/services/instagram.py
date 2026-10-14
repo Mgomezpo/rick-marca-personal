@@ -260,15 +260,12 @@ class InstagramService:
                 from google.genai import types
                 client = genai.Client(api_key=config.GEMINI_API_KEY)
                 grounding_prompt = (
-                    f"Actúa como un analista de inteligencia de contenido y Head of Content.\n"
-                    f"Investiga a fondo la huella pública del creador con usuario de Instagram/redes '@{handle}'.\n"
-                    f"Busca en Instagram (instagram.com/{handle}), LinkedIn, web personal y proyectos asociados:\n"
-                    f"1. Quién es, ciudad/país, proyectos y empresas que ha fundado o lidera (ej. startups, agencias, apps).\n"
-                    f"2. Su trayectoria previa o background técnico/profesional (roles, industrias, marketing, consultoría, etc.).\n"
-                    f"3. Su posicionamiento o ángulo central (cómo se define, 'AI bro no técnico', 'AI sin muchas vueltas', etc.).\n"
-                    f"4. Temas principales de su contenido, reels o publicaciones destacadas, y qué casos de éxito, automatizaciones o historias de trinchera ha compartido.\n"
-                    f"5. Diagnóstico inicial de contenido: qué le funciona mejor (pruebas tangibles, ROI, historias) vs qué le falta o qué contenido se siente más genérico.\n"
-                    f"Entrega un informe directo, conciso y repleto de hechos concretos sin inventar nada."
+                    f"Busca en Google con la consulta exacta: \"{handle}\" instagram\n"
+                    f"y también busca '\"{handle}\"' en LinkedIn, web y proyectos asociados.\n"
+                    f"REGLA OBLIGATORIA DE EXACTITUD: Habla ÚNICAMENTE de la persona dueña de la cuenta de Instagram @{handle}.\n"
+                    f"PROHIBIDO TERMINANTEMENTE hablar de personas que compartan el nombre pero tengan otro usuario o vivan en otra ciudad ajena a sus redes.\n"
+                    f"Si el usuario es '{handle}', busca su biografía de Instagram, ubicación, empresas o proyectos asociados (ej. agencias, apps, startups), y qué temas comparte en sus publicaciones.\n"
+                    f"Entrega un informe directo y conciso con los hechos concretos verificados."
                 )
                 grounded_text = ""
                 for model_candidate in ["gemini-2.5-flash", "gemini-2.5-flash-lite"]:
