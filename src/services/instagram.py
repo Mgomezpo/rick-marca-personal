@@ -270,22 +270,27 @@ class InstagramService:
                     f"5. Diagnóstico inicial de contenido: qué le funciona mejor (pruebas tangibles, ROI, historias) vs qué le falta o qué contenido se siente más genérico.\n"
                     f"Entrega un informe directo, conciso y repleto de hechos concretos sin inventar nada."
                 )
-                resp = client.models.generate_content(
-                    model="gemini-2.5-flash-lite",
-                    contents=grounding_prompt,
-                    config=types.GenerateContentConfig(tools=[types.Tool(google_search=types.GoogleSearch())])
-                )
-                grounded_text = (resp.text or "").strip()
-                if grounded_text and len(grounded_text) > 40:
-                    logger.info(f"🌐 [Web Grounding] Éxito investigando @{handle} con búsqueda web en vivo.")
-                    return {
-                        "handle": handle,
-                        "reels": [],
-                        "source": "web_grounding",
-                        "summary": grounded_text
-                    }
+                grounded_text = ""
+                for model_candidate in ["gemini-2.5-flash", "gemini-2.5-flash-lite"]:
+                    try:
+                        resp = client.models.generate_content(
+                            model=model_candidate,
+                            contents=grounding_prompt,
+                            config=types.GenerateContentConfig(tools=[types.Tool(google_search=types.GoogleSearch())])
+                        )
+                        grounded_text = (resp.text or "").strip()
+                        if grounded_text and len(grounded_text) > 40:
+                            logger.info(f"🌐 [Web Grounding] Éxito investigando @{handle} con {model_candidate}.")
+                            return {
+                                "handle": handle,
+                                "reels": [],
+                                "source": "web_grounding",
+                                "summary": grounded_text
+                            }
+                    except Exception as me:
+                        logger.warning(f"Aviso Web Grounding ({model_candidate}) para @{handle}: {me}")
             except Exception as e:
-                logger.warning(f"Aviso Web Grounding para @{handle}: {e}")
+                logger.warning(f"Aviso inicializando cliente Web Grounding para @{handle}: {e}")
 
         return {
             "handle": handle,
