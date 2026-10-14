@@ -28,3 +28,21 @@ def test_vfs_search_brain(vfs):
     res = vfs.search_brain("quiebre cognitivo", "test-user-id")
     assert len(res) > 20
     assert "quiebre cognitivo" in res.lower() or "studio" in res.lower()
+
+def test_vfs_path_traversal_blocked(vfs):
+    # Intentos de path traversal para escapar a carpetas del sistema o secretos (.env)
+    res_env = vfs.read_file("skills/../.env", "test-user-id")
+    assert "no encontrado o ruta no autorizada" in res_env
+    assert "SUPABASE" not in res_env
+    assert "OPENAI" not in res_env
+
+    res_deep = vfs.read_file("filosofia/../../.env", "test-user-id")
+    assert "no encontrado o ruta no autorizada" in res_env
+
+    # list_dir con path traversal debe devolver lista vacía
+    escaped_list = vfs.list_dir("skills/../", "test-user-id")
+    assert escaped_list == []
+
+def test_vfs_null_byte_blocked(vfs):
+    res_null = vfs.read_file("skills/guionista/SKILL.md\x00.txt", "test-user-id")
+    assert "no encontrado o ruta no autorizada" in res_null
