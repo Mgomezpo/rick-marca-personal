@@ -1,0 +1,13 @@
+services:
+  rick-bot:
+    build: .
+    container_name: rick-telegram-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TZ=America/Bogota
+    volumes:
+      - .:/app
+    command: ["python", "-m", "src.services.telegram_bot"]
+

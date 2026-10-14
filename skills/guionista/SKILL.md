@@ -28,38 +28,50 @@ producción tras `ireal-hook-writer`.
 
 ## Reglas del guion (prioridad MÁXIMA — ganan sobre cualquier referencia)
 1. PROHIBIDO abrir presentándose o saludando ("Hola", "Bienvenidos", "Hoy les voy a hablar de…", "En este video…"). Empieza DENTRO de la escena, el dolor o la promesa.
-2. **Estilo de relación:** Habla siempre desde el "yo" hacia el "tú". Es una conversación directa, no una lección sobre "la gente" en tercera persona.
-3. Short-form: completo y grabable, ~120-200 palabras (sin tope rígido; ~45-75s hablados). Si una frase no añade tensión, dato o avance, córtala; nunca sacrifiques sustancia por acortar.
-4. 3 BLOQUES separados por una línea en blanco: **GANCHO** (1-2 frases) / **DESARROLLO** (3-5 frases, sigue la estructura declarada, UNA idea con detalle concreto) / **CIERRE** (1-2 frases + UN solo CTA).
-5. Lenguaje hablado: frases cortas (~15 palabras máx), ritmo variado.
-6. Especificidad = credibilidad: números precisos, no redondos. Al menos la mitad en primera persona del creador ("cuando yo…", "con mi cliente…").
-7. Nada de estadísticas de mercado inventadas ("el 80% de las empresas…").
+2. **Estilo de relación:** Habla siempre desde el "yo" hacia el "tú". Es una conversación directa de socio a socio, nunca una lección sobre "la gente" en tercera persona.
+3. **Cero teleprompter ni ensayo leído:** Frases cortas, lenguaje hablado, de trinchera y humano.
+4. **Cero emojis:** Mantener sobriedad absoluta en títulos y viñetas.
+5. **Estructura por pasos con intención:** Cada paso del guion debe incluir:
+   - `• Texto:` la frase exacta hablada.
+   - `• Intención:` el efecto psicológico que busca en la audiencia.
+   - `• Cámara:` dirección visual sobria (plano, B-roll o gesto).
+6. **Metadata al final:** El tono de conversación y el copy para publicar van estrictamente al final en la sección `DIRECCIÓN Y COPY`.
 
-## Estructuras de storytelling (declara UNA en estructura_tipo)
-- **pas** — Problema → Agitación → Solución. Para dolores que ya sienten.
-- **bab** — Antes → Después → Puente. Para transformaciones/promesas.
-- **aida** — Atención → Interés → Deseo → Acción. Para promocional/conversión.
-- **historia_leccion** — Contexto (escena concreta) → Conflicto → Resolución → Lección. Para experiencias personales.
-- **caso_real** — El caso → Lo que se hizo → Resultado observable → Por qué funciona. Para enseñar con prueba.
-Regla de oro: enseña el tema A TRAVÉS de un momento/escena/caso, nunca recitando consejos.
+## Estructuras de storytelling (declara UNA en Estructura)
+- **PAS** — Problema → Agitación → Solución. (1. HOOK, 2. EL PROBLEMA, 3. LA REVELACIÓN, 4. EL CIERRE).
+- **BAB** — Antes → Después → Puente. (1. HOOK, 2. EL ANTES, 3. EL DESPUÉS, 4. EL PUENTE, 5. EL CIERRE).
+- **CASO_REAL** — El caso → Lo que se hizo → Resultado observable. (1. HOOK, 2. EL SÍNTOMA, 3. LA OPERACIÓN, 4. EL RESULTADO & PRINCIPIO, 5. EL CIERRE).
+- **HISTORIA_LECCION** — Contexto → Conflicto → Resolución → Lección. (1. HOOK, 2. LA ESCENA, 3. EL QUIEBRE, 4. LA LECCIÓN TRANSFERIBLE, 5. EL CIERRE).
+- **QUIEBRE_COGNITIVO** — Desafío al dogma del nicho. (1. HOOK, 2. EL DOGMA DEL MERCADO, 3. LA FUGA INVISIBLE, 4. EL NUEVO ESTÁNDAR, 5. EL CIERRE).
 
-## Craft por formato (adapta al formato de entrega)
-- **Video Corto:** gancho en 1-3s; una idea; cierre entrega el pago + invita a guardar/compartir.
-- **Video Largo:** reafirma la promesa con lo que está en juego; estructura en capítulos.
-- **Carrusel Visual:** portada = titular + promesa; una idea por lámina; micro-suspenso que obliga a pasar.
-- **Escrito/Blog:** gancho línea 1; aire visual; cierre con pregunta/acción.
-- **Audio/Podcast:** cold open con el momento más interesante.
-- **Historia/Narrativa:** Contexto → Conflicto → Resolución → Lección.
-Si el creador nombra una plataforma concreta (reel, short, hilo…), adapta el craft también a ella.
+## Salida Oficial Obligatoria
 
-## CTA (una sola acción por pieza)
-Educativo → guardar/completar · Historia/Personal → identificación · Conversación → pregunta abierta · Promocional → acción directa concreta.
+```text
+GUION: [TÍTULO CORTO Y CONTUNDENTE]
+Formato: [Reel / Short (45-60s)] | Estructura: [PAS / BAB / CASO_REAL / HISTORIA_LECCION / QUIEBRE_COGNITIVO]
 
-## Salida
-- **guion** — el guion completo (3 bloques, ~120-200 palabras, sin saludos).
-- **estructura_tipo** — pas | bab | aida | historia_leccion | caso_real.
-- **punto_quiebre** — el re-enganche a mitad de pieza, máx 20 palabras.
+OBJETIVO Y TRANSFORMACIÓN
+[1 o 2 frases contundentes que sustentan el video: de dónde parte la audiencia y hacia dónde la llevas al finalizar].
+
+1. HOOK
+• Texto: "[Frase exacta y potente para detener el scroll sin preámbulos]"
+• Intención: "[Por qué se abre así: desarmar justificaciones, tocar el dolor o abrir curiosidad]"
+• Cámara: "[Plano medio cerrado, mirada directa al lente, cero saludos]"
+
+[PASOS SIGUIENTES SEGÚN LA ESTRUCTURA DECLARADA (Texto + Intención + Cámara)]
+
+---
+DIRECCIÓN Y COPY
+• Tono: [Conversación en una mesa de café, de socio a socio. Desinfla el ego de locutor].
+• Copy para Publicar:
+[Gancho en texto de una sola línea]
+[Bullet 1 con idea central]
+[Bullet 2 con criterio o aprendizaje]
+[Pregunta abierta para invitar a reflexionar y comentar]
+[3 hashtags relevantes del nicho]
+```
 
 ## Pitfalls
-- No un resumen ni una lista de consejos: un SCRIPT grabable tal cual.
+- No un resumen ni una lista de consejos abstractos: pasos con texto grabable tal cual.
 - No repitas literal el hook en la primera línea; ábrelo y flúyelo.
+- Cero emojis y cero saludos corporativos.
