@@ -4,6 +4,16 @@ All notable changes to the RICK Multitenant Agent Engine project will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-10-19
+
+### Added
+- **Multi-Turn Session Persistence (`db-repository`):** Added `save_message`, `get_conversation`, and `clear_conversation` to `SupabaseRepository` with strict `user_id` multi-tenant isolation, preserving conversation context across distinct incoming WhatsApp webhooks.
+- **Outbound WhatsApp Cloud API Dispatcher (`api-webhook`):** Implemented `send_whatsapp_message` to automatically dispatch generated responses back to user WhatsApp accounts via Meta Graph API (`v19.0/{phone_number_id}/messages`).
+
+### Changed
+- **Mayeutic Inquiry Decoupling (`rick-strategist`):** Decoupled scene and root-friction detection from rigid turn-count barriers, allowing articulate creators providing both elements to transition directly to script writing without redundant inquiry turns.
+- **Dependency & Version Sync:** Synchronized `pyproject.toml` version to `1.0.0` and explicitly declared `psutil>=5.9.0` dependency.
+
 ## [1.0.0] - 2026-10-18
 
 ### Added
