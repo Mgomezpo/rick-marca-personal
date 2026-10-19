@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RICK — Mapa Mental de Arquitectura</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,700&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Reenie+Beanie&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #FDF6EB;
+      --paper-warm: #F4EAD5;
+      --paper-card: #FFFFFF;
+      --ink: #0B0B0B;
+      --ink-soft: #2A241E;
+      --mute: #8B7E6A;
+      --crimson: #9F1522;
+      --crimson-deep: #6E0B14;
+      --crimson-wash: rgba(159, 21, 34, 0.08);
+      --green: #1B8A4B;
+      --amber: #B26B00;
+      --line: rgba(11, 11, 11, 0.12);
+      --line-strong: rgba(11, 11, 11, 0.28);
+      --serif: "Fraunces", Georgia, serif;
+      --sans: "Outfit", system-ui, sans-serif;
+      --mono: "JetBrains Mono", monospace;
+      --hand: "Reenie Beanie", cursive;
+      --shadow: 0 16px 36px -12px rgba(11, 11, 11, 0.14), 0 2px 6px rgba(11, 11, 11, 0.06);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--paper);
+      color: var(--ink-soft);
+      font-family: var(--sans);
+      min-height: 100vh;
+      padding: 40px 24px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 24px;
+      margin-bottom: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .kicker {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--crimson);
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(32px, 5vw, 48px);
+      color: var(--ink);
+      line-height: 1.1;
+    }
+
+    .rick-stamp {
+      font-family: var(--hand);
+      font-size: 26px;
+      color: var(--crimson);
+      transform: rotate(-2deg);
+      text-align: right;
+    }
+
+    /* Architecture Stack */
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      position: relative;
+    }
+
+    .connector {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      color: var(--mute);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    .connector::before, .connector::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: var(--line-strong);
+    }
+
+    .arrow-down {
+      text-align: center;
+      color: var(--crimson);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .card {
+      background: var(--paper-card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .badge-mobile { background: var(--paper-warm); color: var(--ink-soft); }
+    .badge-core { background: var(--crimson-wash); color: var(--crimson); border: 1px solid var(--crimson); }
+    .badge-db { background: rgba(27, 138, 75, 0.1); color: var(--green); border: 1px solid var(--green); }
+    .badge-web { background: #EBF3FD; color: #1555A8; border: 1px solid #1555A8; }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .item-box {
+      background: var(--paper-warm);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 14px 16px;
+    }
+
+    .item-box strong {
+      display: block;
+      color: var(--ink);
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .item-box p {
+      font-size: 13px;
+      color: var(--ink-soft);
+      line-height: 1.4;
+    }
+
+    .highlight-pill {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--crimson);
+      background: var(--paper);
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-top: 6px;
+      border: 1px solid rgba(159, 21, 34, 0.2);
+    }
+
+    .flow-note {
+      font-family: var(--hand);
+      font-size: 20px;
+      color: var(--crimson);
+      margin-top: 12px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <div class="kicker">Arquitectura de Flujo de Datos · 2026</div>
+        <h1>El Mapa Mental de RICK</h1>
+      </div>
+      <div class="rick-stamp">
+        "Tu taller editorial,<br>desde el bolsillo a la mesa."
+      </div>
+    </header>
+
+    <div class="stack">
+
+      <!-- CAPA 1: CANALES RÁPIDOS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">1. Entrada Rápida en el Bolsillo</div>
+          <span class="badge badge-mobile">WhatsApp & Telegram</span>
+        </div>
+        <div class="grid-3">
+          <div class="item-box">
+            <strong>🎙️ Notas de Voz / Links</strong>
+            <p>Le hablas como a tu socio. RICK transcribe, extrae la idea y la categoriza sin fricción.</p>
+          </div>
+          <div class="item-box">
+            <strong>⚡ Aprobación 1-Clic</strong>
+            <p>"Te dejé listo el guion para hoy". Respondes "Aprobado" y RICK dispara la publicación.</p>
+          </div>
+          <div class="item-box">
+            <strong>🔔 Alertas Proactivas</strong>
+            <p>A las 8:00 AM te avisa qué está listo. Por la tarde te resume métricas y aprendizajes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector">
+        <span>Webhook / Webhook Handler (Meta & Telegram)</span>
+      </div>
+      <div class="arrow-down">↓</div>
+
+      <!-- CAPA 2: MOTOR RICK -->
+      <div class="card" style="border-left: 4px solid var(--crimson);">
+        <div class="card-header">
+          <div class="card-title">2. Motor Central: RICK & Subagentes</div>
+          <span class="badge badge-core">Python FastAPI & Subagentes</span>
+        </div>
+        <div class="grid-3">
+          <div class="item-box">
+            <strong>🎯 Hook Writer Subagent</strong>
+            <p>Especialista en retención y los primeros 3 segundos. Aplica los 9 arquetipos canónicos.</p>
+            <span class="highlight-pill">src/engine/subagents/hook_writer.py</span>
+          </div>
+          <div class="item-box">
+            <strong>📝 Guionista Subagent</strong>
+            <p>Escribe beat por beat (Hook → Conflicto → Insight → Cierre) con el ADN de voz del creador.</p>
+            <span class="highlight-pill">src/engine/subagents/guionista.py</span>
+          </div>
+          <div class="item-box">
+            <strong>✂️ Anti-Slop Editor</strong>
+            <p>Poda clichés, elimina lenguaje corporativo y censura saludos aburridos.</p>
+            <span class="highlight-pill">src/engine/subagents/anti_slop_editor.py</span>
+          </div>
+        </div>
+        <div style="margin-top: 16px;" class="item-box">
+          <strong>🦾 Módulo Meta (Instagram / Facebook)</strong>
+          <p>Custodia de tokens cifrados (AES-256-GCM) y publicación directa con Graph API.</p>
+        </div>
+      </div>
+
+      <div class="connector">
+        <span>Mutaciones & Lectura RLS</span>
+      </div>
+      <div class="arrow-down">↓</div>
+
+      <!-- CAPA 3: BASE DE DATOS CENTRAL -->
+      <div class="card" style="border: 2px solid var(--green); background: #FAFDF9;">
+        <div class="card-header">
+          <div class="card-title">3. Supabase: El Centro de Gravedad (Única Fuente de Verdad)</div>
+          <span class="badge badge-db">Postgres + RLS + Triggers</span>
+        </div>
+        <div class="grid-3">
+          <div class="item-box">
+            <strong>📋 Tablas Operativas</strong>
+            <p><code>pieces</code>: Guiones, hooks y copys.<br><code>rick_items</code>: Decisiones de la bandeja.<br><code>scrapbook_boards</code>: Nodos del mapa.</p>
+          </div>
+          <div class="item-box">
+            <strong>🧠 Cerebro del Creador</strong>
+            <p><code>brand_assets</code>: Voz, ICP, Pilares.<br><code>user_profiles</code>: Ángulo único, tono.<br><code>episodic_memory</code>: RAG 768d.</p>
+          </div>
+          <div class="item-box">
+            <strong>⚡ Reglas y Triggers</strong>
+            <p>Cuando cambia un estado en la BD (ej: <code>approved</code>), Supabase notifica a RICK para ejecutar la acción.</p>
+          </div>
+        </div>
+        <span class="flow-note">✎ RICK y la Web leen y escriben sobre la misma base; nunca se desincronizan.</span>
+      </div>
+
+      <div class="connector">
+        <span>Suscripción Realtime & Lectura Directa</span>
+      </div>
+      <div class="arrow-down">↓</div>
+
+      <!-- CAPA 4: APLICACIÓN WEB -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">4. La Aplicación Web (La Mesa de Trabajo)</div>
+          <span class="badge badge-web">Next.js + Estilo Editorial</span>
+        </div>
+        <div class="grid-3">
+          <div class="item-box">
+            <strong>📰 La Bandeja de Decisiones</strong>
+            <p>Renderiza la edición del día que RICK preparó. Solo decisiones para aprobar, editar o rechazar.</p>
+          </div>
+          <div class="item-box">
+            <strong>🗺️ El Mapa Espacial (React Flow)</strong>
+            <p>Islas de campañas y nodos táctiles: Boceto → Tinta → Sello (Aprobado) → Medida (Métricas).</p>
+          </div>
+          <div class="item-box">
+            <strong>🎙️ Estudio & Teleprompter</strong>
+            <p>Para sentarse con calma a grabar los guiones que ya aprobaste en tu móvil.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
