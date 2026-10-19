@@ -47,11 +47,11 @@
 ### Task 2: Definir el State Schema del Grafo (`core-state`)
 **Description:** Diseñar los modelos Pydantic y `TypedDict` que representan el estado inmutable del grafo de RICK (`GraphState`), incluyendo perfil del creador, historial de conversación, contexto de referentes, learnings acumulados, borrador del guion y estado del loop de evaluación.
 **Acceptance criteria:**
-- [ ] `GraphState` definido con tipado estricto en `src/graph/state.py`.
-- [ ] Modelos de datos para `CreatorProfile`, `ScriptDraft` (Hook, Desarrollo, Cierre con Texto, Intención, Cámara), `EvaluationResult`, `WinningPattern`, `LearningItem`.
-- [ ] Funciones de serialización y actualización funcional de estado.
+- [x] `GraphState` definido con tipado estricto en `src/graph/state.py`.
+- [x] Modelos de datos para `CreatorProfile`, `ScriptDraft` (Hook, Desarrollo, Cierre con Texto, Intención, Cámara), `EvaluationResult`, `WinningPattern`, `LearningItem`.
+- [x] Funciones de serialización y actualización funcional de estado.
 **Verification:**
-- [ ] Tests pasan: `pytest -v tests/test_state.py`
+- [x] Tests pasan: `pytest -v tests/test_state.py`
 **Dependencies:** Task 1  
 **Files likely touched:**
 - `src/graph/state.py`
@@ -61,8 +61,8 @@
 ---
 
 ## Checkpoint 1: Base de Tipos y Estado Verificada
-- [ ] `pytest -v tests/test_state.py` en verde.
-- [ ] Estado inmutable y serializable a JSON.
+- [x] `pytest -v tests/test_state.py` en verde.
+- [x] Estado inmutable y serializable a JSON.
 
 ---
 
