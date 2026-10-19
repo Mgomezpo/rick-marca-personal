@@ -75,8 +75,8 @@ def rick_strategist_node(state: GraphState) -> GraphState:
 
     if intent == "chat":
         response = (
-            "Buen día. Tengo tus referentes y tus números presentes. "
-            "¿Qué tema o anécdota de trinchera quieres trabajar hoy?"
+            "Buen día. En el equipo tenemos los referentes y números al día. "
+            "¿Qué fricción o anécdota de trinchera trabajamos hoy para el canal?"
         )
         state_updates["final_response"] = response
 
@@ -106,9 +106,9 @@ def rick_strategist_node(state: GraphState) -> GraphState:
         state_updates["final_response"] = response
 
     elif intent == "view_report":
-        state_updates["final_response"] = "Preparando la auditoría de tu cuenta y los aprendizajes de la semana."
+        state_updates["final_response"] = "Revisemos cómo cerramos la semana y los aprendizajes en nuestro canal."
 
     elif intent == "generate_script":
-        state_updates["final_response"] = "Listo. Convocando al guionista técnico para armar la estructura en 3 bloques."
+        state_updates["final_response"] = "Listo. Convoquemos al guionista para estructurar la pieza en 3 bloques."
 
     return update_state(state, **state_updates)

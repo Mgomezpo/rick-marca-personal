@@ -110,3 +110,54 @@ def test_rick_node_direct_transition_when_scene_and_friction_provided():
     assert result_state["current_intent"] == "generate_script"
     assert "guion" in result_state["final_response"].lower()
 
+
+def test_rick_system_prompt_and_nodes_embody_internal_team_identity():
+    # Prompt asserts internal team belonging
+    assert "Head of Content" in RICK_CANONICAL_SYSTEM_PROMPT
+    assert "nuestro canal" in RICK_CANONICAL_SYSTEM_PROMPT
+    assert "revisemos" in RICK_CANONICAL_SYSTEM_PROMPT
+
+    # Absence of cold external consultant or generic chatbot phrases
+    banned_external_phrases = [
+        "tu consultor", "servicio externo", "como IA", "como modelo de lenguaje",
+        "mi cliente", "te entrego la consultoría"
+    ]
+    for banned in banned_external_phrases:
+        assert banned not in RICK_CANONICAL_SYSTEM_PROMPT
+
+
+def test_trench_inquiry_internal_team_voice():
+    from src.agents.trench import generate_trench_inquiry
+    msg = generate_trench_inquiry("miguel_dev")
+    # Loop 3 identity: team member in the trenches
+    assert "equipo" in msg.lower()
+    assert "mover piezas" in msg.lower()
+    assert "nota de voz" in msg.lower()
+    assert "guion" in msg.lower()
+
+
+def test_spark_whatsapp_internal_team_voice():
+    from src.agents.spark import generate_proactive_spark, format_spark_whatsapp
+    from src.graph.state import WinningPattern
+    pattern = WinningPattern(
+        pattern_id="wp_test",
+        tipo_hook="revelacion_contraria",
+        formato="Reel",
+        emocion="intriga",
+        rendimiento_relativo_promedio=2.5,
+        piezas_respaldo=3,
+        ejemplos=["Hook de prueba"],
+    )
+    spark = generate_proactive_spark(
+        creator_handle="miguel_dev",
+        creator_nicho="Sistemas",
+        winning_pattern=pattern,
+        creator_thesis="Menos agentes, más control determinístico",
+        source_referent="@casidonovan",
+    )
+    msg = format_spark_whatsapp(spark, handle="miguel_dev")
+    assert "radar del equipo" in msg.lower()
+    assert "nuestra tesis" in msg.lower()
+    assert "luz verde" in msg.lower()
+
+

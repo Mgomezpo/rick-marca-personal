@@ -9,9 +9,9 @@
 - [x] **Task 1.3:** Tests unitarios en `tests/test_governor.py` validando rechazo antes de las 42h, rechazo antes de las 17:00 y aprobación dentro de la ventana.
 
 ### Fase 2: Tono e Identidad de RICK como Miembro de Equipo (`idea-refine`)
-- [ ] **Task 2.1:** Actualizar `RICK_CANONICAL_SYSTEM_PROMPT` en `src/agents/prompts.py` (lenguaje de complicidad de equipo: "nuestro canal", "revisemos").
-- [ ] **Task 2.2:** Ajustar los prompts y respuestas de `src/agents/rick.py`, `src/agents/trench.py` y `src/agents/spark.py`.
-- [ ] **Task 2.3:** Validar en `tests/test_rick_node.py` y `tests/test_conversation_ux.py` el tono de equipo y ausencia de frases de consultor externo.
+- [x] **Task 2.1:** Actualizar `RICK_CANONICAL_SYSTEM_PROMPT` en `src/agents/prompts.py` (lenguaje de complicidad de equipo: "nuestro canal", "revisemos").
+- [x] **Task 2.2:** Ajustar los prompts y respuestas de `src/agents/rick.py`, `src/agents/trench.py` y `src/agents/spark.py`.
+- [x] **Task 2.3:** Validar en `tests/test_rick_node.py` y `tests/test_conversation_ux.py` el tono de equipo y ausencia de frases de consultor externo.
 
 ### Fase 3: Motor de Radar "Wide & Fresh" y Anti-Solapamiento (`api-and-interface-design` + `incremental-implementation`)
 - [ ] **Task 3.1:** Implementar función `sample_wide_radar` (tope de 3 posts recientes por creador sobre pool de 15–25 cuentas) en `src/matrix/analyzer.py`.
