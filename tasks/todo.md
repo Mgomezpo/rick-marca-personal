@@ -248,12 +248,12 @@
 ### Task 12: Containerización y Configuración de Producción
 **Description:** Crear el `Dockerfile` optimizado en Python 3.11-slim, scripts de arranque, archivo `.dockerignore` y asegurar que la aplicación pase todas las auditorías de seguridad y variables de entorno antes del despliegue.
 **Acceptance criteria:**
-- [ ] `Dockerfile` multi-stage ligero creado y probado localmente.
-- [ ] Endpoint `GET /health` responde estado del sistema y conectividad Supabase en JSON.
-- [ ] Manejo seguro de secretos mediante variables de entorno de producción.
+- [x] `Dockerfile` multi-stage ligero creado y probado localmente.
+- [x] Endpoint `GET /health` responde estado del sistema y conectividad Supabase en JSON.
+- [x] Manejo seguro de secretos mediante variables de entorno de producción.
 **Verification:**
-- [ ] Build local de contenedor o validación de configuración exitosa.
-- [ ] `pytest tests/test_api_webhook.py -k test_health` en verde.
+- [x] Build local de contenedor o validación de configuración exitosa.
+- [x] `pytest tests/test_api_webhook.py -k test_health` en verde.
 **Dependencies:** Task 11  
 **Files likely touched:**
 - `Dockerfile`
