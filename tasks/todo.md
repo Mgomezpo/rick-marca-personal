@@ -71,10 +71,10 @@
 ### Task 3: Implementar Cálculo de Medianas y Métricas Relativas
 **Description:** Crear el calculador de medianas por cuenta y rendimiento relativo ($R = \text{views} / \text{mediana}$), con soporte tanto para cuentas de referentes como para la cuenta propia del creador.
 **Acceptance criteria:**
-- [ ] Función `calculate_account_median(views_list)` que descarta ceros o nulos y calcula la mediana exacta.
-- [ ] Función `calculate_relative_performance(views, median)` con clasificaciones automáticas (`> 1.5x` ganador, `< 0.7x` bajo).
+- [x] Función `calculate_account_median(views_list)` que descarta ceros o nulos y calcula la mediana exacta.
+- [x] Función `calculate_relative_performance(views, median)` con clasificaciones automáticas (`> 1.5x` ganador, `< 0.7x` bajo).
 **Verification:**
-- [ ] Tests pasan: `pytest -v tests/test_matrix_metrics.py`
+- [x] Tests pasan: `pytest -v tests/test_matrix_metrics.py`
 **Dependencies:** Task 2  
 **Files likely touched:**
 - `src/matrix/metrics.py`
