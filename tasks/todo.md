@@ -111,11 +111,11 @@
 ### Task 5: Nodo RICK de Extracción Creativa y Mayéutica (Tono Rubin)
 **Description:** Implementar el orquestador conversacional que hace preguntas simples, aplica la regla de los 3 porqués y extrae anécdotas reales del creador antes de pasar a la fase de guionismo.
 **Acceptance criteria:**
-- [ ] Prompt canónico de RICK enfocado en conversación fluida, preguntas reflexivas y extracción de vivencias.
-- [ ] Enrutador de intención (`chat`, `extract_story`, `generate_script`, `view_report`).
-- [ ] Cero sermones de IA o introducciones acartonadas.
+- [x] Prompt canónico de RICK enfocado en conversación fluida, preguntas reflexivas y extracción de vivencias.
+- [x] Enrutador de intención (`chat`, `extract_story`, `generate_script`, `view_report`).
+- [x] Cero sermones de IA o introducciones acartonadas.
 **Verification:**
-- [ ] Tests pasan: `pytest -v tests/test_rick_node.py`
+- [x] Tests pasan: `pytest -v tests/test_rick_node.py`
 **Dependencies:** Task 2  
 **Files likely touched:**
 - `src/agents/rick.py`
