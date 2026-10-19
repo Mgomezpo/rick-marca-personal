@@ -144,12 +144,12 @@
 ### Task 7: Implementar el Loop de Calidad (Anti-Plagio + Anti-Slop + Simulación)
 **Description:** Implementar el bucle evaluador-optimizador que audita el guion en tres filtros: (1) Verificador de similitud (<5 palabras seguidas del referente), (2) Checklist anti-slop, y (3) Simulador de probabilidad respaldado en $n$ piezas.
 **Acceptance criteria:**
-- [ ] Filtro anti-plagio que compara el campo `Texto` contra los videos referentes.
-- [ ] Nodo `antislop_node(state)` que califica naturalidad, tono y ausencia de frases de gurú.
-- [ ] Arista condicional: si score $< 8$ o hay plagio detectado, reintenta con feedback (máximo 3 intentos).
-- [ ] Cálculo de estimación (Alta/Media/Baja) y confianza empírica.
+- [x] Filtro anti-plagio que compara el campo `Texto` contra los videos referentes.
+- [x] Nodo `antislop_node(state)` que califica naturalidad, tono y ausencia de frases de gurú.
+- [x] Arista condicional: si score $< 8$ o hay plagio detectado, reintenta con feedback (máximo 3 intentos).
+- [x] Cálculo de estimación (Alta/Media/Baja) y confianza empírica.
 **Verification:**
-- [ ] Tests pasan: `pytest -v tests/test_quality_loop.py`
+- [x] Tests pasan: `pytest -v tests/test_quality_loop.py`
 **Dependencies:** Task 6  
 **Files likely touched:**
 - `src/agents/evaluator.py`
@@ -160,8 +160,8 @@
 ---
 
 ## Checkpoint 3: Loop y Calidad Verificados
-- [ ] `pytest -v tests/test_guionista.py tests/test_quality_loop.py` en verde.
-- [ ] Rechazo automático de plagios y clichés; aprobación de guiones auténticos.
+- [x] `pytest -v tests/test_guionista.py tests/test_quality_loop.py` en verde.
+- [x] Rechazo automático de plagios y clichés; aprobación de guiones auténticos.
 
 ---
 
