@@ -11,12 +11,12 @@
 ### Task 0: Inicializar Repositorio Git y Crear Feature Branch
 **Description:** Inicializar el repositorio Git en la raíz del proyecto, configurar `.gitignore` para no filtrar credenciales ni entornos virtuales, crear el commit inicial en `main` y abrir la rama de desarrollo `feature/rick-agent-engine`.
 **Acceptance criteria:**
-- [ ] Git inicializado en la raíz del proyecto.
-- [ ] `.gitignore` protegiendo `.env`, `.venv`, `__pycache__`, `.pytest_cache`, `.agents`.
-- [ ] Rama de trabajo activa `feature/rick-agent-engine`.
-- [ ] Commit inicial con Conventional Commits: `chore: initial workspace structure and task plan`.
+- [x] Git inicializado en la raíz del proyecto.
+- [x] `.gitignore` protegiendo `.env`, `.venv`, `__pycache__`, `.pytest_cache`, `.agents`.
+- [x] Rama de trabajo activa `feature/rick-agent-engine`.
+- [x] Commit inicial con Conventional Commits: `chore: initial workspace structure and task plan`.
 **Verification:**
-- [ ] `git status` muestra working tree limpio en rama `feature/rick-agent-engine`.
+- [x] `git status` muestra working tree limpio en rama `feature/rick-agent-engine`.
 **Dependencies:** None  
 **Files likely touched:**
 - `.gitignore`  
@@ -31,10 +31,10 @@
 **Acceptance criteria:**
 - [x] `pyproject.toml` creado con dependencias y configuración de `pytest`.
 - [x] `tests/__init__.py` y `src/__init__.py` inicializados.
-- [ ] Entorno ejecuta `pytest tests/` sin fallos.
-- [ ] Commit atómico: `chore: setup project dependencies and pytest structure`.
+- [x] Entorno ejecuta `pytest tests/` sin fallos.
+- [x] Commit atómico: `chore: setup project dependencies and pytest structure`.
 **Verification:**
-- [ ] `pytest tests/` ejecuta con código 0 o sin crash.
+- [x] `pytest tests/` ejecuta con código 0 o sin crash.
 **Dependencies:** Task 0  
 **Files likely touched:**
 - `pyproject.toml`
