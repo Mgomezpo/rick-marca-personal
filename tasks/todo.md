@@ -328,5 +328,16 @@
 - [x] Auditoría de seguridad y rendimiento aprobada.
 - [x] Motor RICK en producción, conectado a WhatsApp y funcionando con calidad máxima.
 
+---
+
+## Checkpoint 7: Post-Review Hardening y Release (`v1.0.1`)
+- [x] Revisión multi-eje ejecutada bajo el skill `code-review-and-quality`.
+- [x] Persistencia de sesiones conversacionales multi-turno implementada en [`SupabaseRepository`](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/src/db/repository.py).
+- [x] Despachador de mensajes salientes a Meta WhatsApp Cloud API (`send_whatsapp_message`) implementado en [`src/api/webhook.py`](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/src/api/webhook.py).
+- [x] Desacople de umbrales rígidos de conteo en la mayéutica Rubin de [`src/agents/rick.py`](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/src/agents/rick.py).
+- [x] Suite de pruebas expandida a 43 tests pasando al 100% en verde.
+- [x] Release `v1.0.1` etiquetada en `main` y documentada en [`CHANGELOG.md`](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/CHANGELOG.md).
+
+
 
 
