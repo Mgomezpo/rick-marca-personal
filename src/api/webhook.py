@@ -1,0 +1,98 @@
+"""WhatsApp Cloud API Webhook handler with sub-200ms ACK and BackgroundTasks processing."""
+import os
+import logging
+from typing import Dict, Any, Optional
+from fastapi import APIRouter, Request, Response, BackgroundTasks, HTTPException, Query
+
+from src.graph.state import create_initial_state, ConversationMessage
+from src.graph.engine import RickGraphEngine
+from src.db.repository import SupabaseRepository
+
+logger = logging.getLogger("rick.webhook")
+router = APIRouter(prefix="/webhook", tags=["Webhook"])
+repo = SupabaseRepository()
+engine = RickGraphEngine()
+
+
+def process_whatsapp_background(payload: Dict[str, Any]) -> None:
+    """
+    Background worker that runs the full RICK graph without blocking the HTTP ACK.
+    """
+    try:
+        entries = payload.get("entry", [])
+        for entry in entries:
+            for change in entry.get("changes", []):
+                value = change.get("value", {})
+                messages = value.get("messages", [])
+                contacts = value.get("contacts", [])
+
+                for msg in messages:
+                    sender_phone = msg.get("from", "unknown_user")
+                    user_id = f"wa_{sender_phone}"
+                    sender_name = contacts[0].get("profile", {}).get("name", sender_phone) if contacts else sender_phone
+
+                    # Extract body text
+                    text_body = ""
+                    if msg.get("type") == "text":
+                        text_body = msg.get("text", {}).get("body", "")
+
+                    if not text_body:
+                        continue
+
+                    # Load or initialize state
+                    profile = repo.get_creator_profile(user_id)
+                    state = create_initial_state(user_id=user_id, handle=sender_name)
+                    if profile:
+                        state["creator_profile"] = profile
+
+                    # Load previous learnings from Supabase
+                    state["learnings"] = repo.get_learnings(user_id)
+
+                    # Append user message
+                    state["messages"].append(ConversationMessage(role="user", content=text_body))
+
+                    # Run graph
+                    final_state = engine.run(state)
+
+                    # Save new learnings generated during the session
+                    for learning in final_state.get("learnings", []):
+                        repo.save_learning(learning)
+
+                    # Save script piece if generated
+                    draft = final_state.get("script_draft")
+                    if draft:
+                        repo.save_piece(user_id, draft)
+
+                    logger.info(f"Processed message for {user_id}: response ready.")
+    except Exception as e:
+        logger.error(f"Error in WhatsApp background processor: {e}")
+
+
+@router.get("/whatsapp")
+def verify_whatsapp_webhook(
+    hub_mode: Optional[str] = Query(None, alias="hub.mode"),
+    hub_challenge: Optional[str] = Query(None, alias="hub.challenge"),
+    hub_verify_token: Optional[str] = Query(None, alias="hub.verify_token"),
+):
+    """
+    Meta WhatsApp Cloud API Webhook challenge verification.
+    """
+    expected_token = os.getenv("WHATSAPP_VERIFY_TOKEN", "rick_secret_verify_token_2026")
+
+    if hub_mode == "subscribe" and hub_verify_token == expected_token:
+        return Response(content=hub_challenge or "", media_type="text/plain")
+
+    raise HTTPException(status_code=403, detail="Verification token mismatch")
+
+
+@router.post("/whatsapp")
+def receive_whatsapp_event(
+    payload: Dict[str, Any],
+    background_tasks: BackgroundTasks,
+):
+    """
+    Receive WhatsApp webhook event.
+    Returns ACK < 100ms and delegates execution to background task.
+    """
+    background_tasks.add_task(process_whatsapp_background, payload)
+    return {"status": "received"}

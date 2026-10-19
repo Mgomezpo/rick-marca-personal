@@ -200,11 +200,11 @@
 ### Task 10: Persistencia Supabase (`IrealDemo`) y Webhook FastAPI
 **Description:** Conectar el repositorio de Supabase con aislamiento multitenant por `user_id`, y exponer el endpoint FastAPI `/webhook/whatsapp` con respuesta ACK inmediata (<200ms) y procesamiento en background.
 **Acceptance criteria:**
-- [ ] Repositorio Supabase para perfiles, learnings y piezas.
-- [ ] Endpoint `POST /webhook/whatsapp` con ACK < 100ms y BackgroundTask.
-- [ ] Pruebas end-to-end con mocks de red.
+- [x] Repositorio Supabase para perfiles, learnings y piezas.
+- [x] Endpoint `POST /webhook/whatsapp` con ACK < 100ms y BackgroundTask.
+- [x] Pruebas end-to-end con mocks de red.
 **Verification:**
-- [ ] Tests pasan: `pytest -v tests/test_api_webhook.py`
+- [x] Tests pasan: `pytest -v tests/test_api_webhook.py`
 **Dependencies:** Task 9  
 **Files likely touched:**
 - `src/db/repository.py`
