@@ -218,15 +218,15 @@
 ### Task 11: Simulación Conversacional de Punta a Punta y Tuning de UX
 **Description:** Ejecutar una batería de pruebas de conversación multi-turno simulando usuarios reales en WhatsApp usando los perfiles de prueba `@casidonovan` (referente) y `@miguel_gomezpo` (creador). Calibrar la experiencia de usuario (UX) para asegurar que el flujo sea natural, no se trabe, responda con calidez y elegancia, y maneje caídas de scraping con fallbacks robustos.
 **Acceptance criteria:**
-- [ ] Batería de tests multi-turno en `tests/test_conversation_ux.py` cubriendo:
+- [x] Batería de tests multi-turno en `tests/test_conversation_ux.py` cubriendo:
   1. Saludo y mayéutica Rubin (preguntas reflexivas).
   2. Aterrizaje de una anécdota vaga con la regla de los 3 porqués.
   3. Extracción de patrones de `@casidonovan` y ensamblado de guion.
   4. Auditoría de cuenta propia con datos de `@miguel_gomezpo` y reporte de learnings.
-- [ ] Manejo de contingencias (si Apify/scraping falla o tarda, degradación elegante con datos en caché o mensaje claro).
-- [ ] Tuning del UX: respuestas limpias, legibles en móvil, cero fricción o formatos rotos.
+- [x] Manejo de contingencias (si Apify/scraping falla o tarda, degradación elegante con datos en caché o mensaje claro).
+- [x] Tuning del UX: respuestas limpias, legibles en móvil, cero fricción o formatos rotos.
 **Verification:**
-- [ ] Tests pasan: `pytest -v tests/test_conversation_ux.py`
+- [x] Tests pasan: `pytest -v tests/test_conversation_ux.py`
 **Dependencies:** Task 10  
 **Files likely touched:**
 - `tests/test_conversation_ux.py`
@@ -237,9 +237,9 @@
 ---
 
 ## Checkpoint 4: Sistema Completo y UX de Alta Gama Verificados
-- [ ] Suite completa en verde: `pytest -v tests/`
-- [ ] Batería de conversación multi-turno con `@casidonovan` y `@miguel_gomezpo` aprobada.
-- [ ] Tiempos de respuesta y formateo de WhatsApp verificados al estándar top tier.
+- [x] Suite completa en verde: `pytest -v tests/`
+- [x] Batería de conversación multi-turno con `@casidonovan` y `@miguel_gomezpo` aprobada.
+- [x] Tiempos de respuesta y formateo de WhatsApp verificados al estándar top tier.
 
 ---
 

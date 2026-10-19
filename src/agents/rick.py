@@ -35,9 +35,14 @@ def classify_intent(user_message: str, current_state: GraphState) -> str:
     story_keywords = [
         "anécdota", "anecdota", "ayer", "problema", "cliente", "quebró", "quiebro",
         "fundé", "funde", "lección", "leccion", "error", "pasó", "paso",
-        "decisión", "decision", "experiencia", "contraté", "contrate", "agencia"
+        "decisión", "decision", "experiencia", "contraté", "contrate", "agencia",
+        "reunión", "reunion", "lanzamiento", "venta", "ventas", "desesperé", "desespere"
     ]
-    if any(k in msg for k in story_keywords) or len(msg.split()) > 15:
+    if any(k in msg for k in story_keywords) or len(msg.split()) >= 10:
+        return "extract_story"
+
+    # Contextual continuation: if we are already extracting a story, stay in extraction unless pure greeting
+    if current_state.get("current_intent") == "extract_story" and not any(g in msg for g in ["hola", "buen día", "buenas tardes"]):
         return "extract_story"
 
     # Intent 4: Chat fallback
@@ -79,11 +84,15 @@ def rick_strategist_node(state: GraphState) -> GraphState:
         story = extract_story_elements(state)
         state_updates["story_extracted"] = story
 
+        user_msgs = [m.content for m in messages if m.role == "user"]
         # Rubin Protocol: Trench inquiry (1 question per turn)
-        # Check if user already gave the scene
-        has_scene = any(w in story.lower() for w in ["reunión", "reunion", "oficina", "llamada", "momento", "pantalla", "cliente", "ayer", "cuando"])
-        # Check if user gave the friction
-        has_friction = any(w in story.lower() for w in ["error", "fricción", "friccion", "quebró", "perdí", "ventas", "mentira", "casi"])
+        # Check if user already gave the concrete scene (what happened in the moment)
+        scene_markers = ["reunión", "reunion", "oficina", "llamada", "pantalla", "apertura", "entró", "entro", "horas", "mirando", "estaba", "abrí", "abri"]
+        has_scene = len(user_msgs) >= 3 and any(w in story.lower() for w in scene_markers)
+
+        # Check if user explained the real friction / root error
+        friction_markers = ["el error", "la fricción", "la friccion", "no validé", "no valide", "quebró", "quebro", "desesperé", "desespere", "mentira"]
+        has_friction = len(user_msgs) >= 4 and any(w in story.lower() for w in friction_markers)
 
         if not has_scene:
             response = "¿Qué pasó exactamente en ese momento? Cuéntame la escena sin adornos."
