@@ -2,7 +2,7 @@
 import os
 import uuid
 from typing import Optional, List, Dict, Any
-from src.graph.state import CreatorProfile, LearningItem, ScriptDraft
+from src.graph.state import CreatorProfile, LearningItem, ScriptDraft, ConversationMessage
 
 
 class SupabaseRepository:
@@ -28,6 +28,7 @@ class SupabaseRepository:
         self._profiles: Dict[str, CreatorProfile] = {}
         self._learnings: Dict[str, List[LearningItem]] = {}
         self._pieces: Dict[str, List[Dict[str, Any]]] = {}
+        self._conversations: Dict[str, List[ConversationMessage]] = {}
 
     def is_healthy(self) -> bool:
         """Verify storage backend connectivity and readiness."""
@@ -164,3 +165,60 @@ class SupabaseRepository:
                 pass
 
         return list(self._pieces.get(user_id, []))
+
+    def save_message(self, user_id: str, message: ConversationMessage) -> None:
+        """Persist a conversation message strictly under user_id."""
+        if not user_id:
+            return
+
+        if self.client is not None:
+            try:
+                self.client.table("conversations").insert({
+                    "user_id": user_id,
+                    "role": message.role,
+                    "content": message.content,
+                    "timestamp": message.timestamp or "",
+                }).execute()
+            except Exception:
+                pass
+
+        if user_id not in self._conversations:
+            self._conversations[user_id] = []
+        self._conversations[user_id].append(message)
+
+    def get_conversation(self, user_id: str, limit: int = 20) -> List[ConversationMessage]:
+        """Retrieve recent conversation messages strictly scoped to user_id."""
+        if not user_id:
+            return []
+
+        if self.client is not None:
+            try:
+                res = self.client.table("conversations").select("*").eq("user_id", user_id).limit(limit).execute()
+                if res.data:
+                    return [
+                        ConversationMessage(
+                            role=row["role"],
+                            content=row["content"],
+                            timestamp=row.get("timestamp"),
+                        )
+                        for row in res.data
+                    ]
+            except Exception:
+                pass
+
+        history = self._conversations.get(user_id, [])
+        return list(history[-limit:])
+
+    def clear_conversation(self, user_id: str) -> None:
+        """Clear conversation history for a given user_id."""
+        if not user_id:
+            return
+
+        if self.client is not None:
+            try:
+                self.client.table("conversations").delete().eq("user_id", user_id).execute()
+            except Exception:
+                pass
+
+        self._conversations[user_id] = []
+
