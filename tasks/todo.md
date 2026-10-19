@@ -292,12 +292,12 @@
 ### Task 14: Auditoría de Seguridad y Rendimiento (`security-and-hardening` + `performance-optimization`)
 **Description:** Ejecutar auditorías con los subagentes `security-auditor` y `web-performance-auditor`, verificar que no existan secretos expuestos, validar la política RLS en Supabase, auditar vulnerabilidades en dependencias (`pip-audit`) y certificar que la latencia del webhook se mantenga bajo el SLA de 200 ms.
 **Acceptance criteria:**
-- [ ] Escaneo de dependencias sin vulnerabilidades críticas ni altas.
-- [ ] Aislamiento de tenants en Supabase auditado (un usuario jamás ve datos de otro).
-- [ ] Latencia del webhook confirmada en $< 200\text{ ms}$.
-- [ ] Aprobación de los subagentes `security-auditor` y `code-reviewer`.
+- [x] Escaneo de dependencias sin vulnerabilidades críticas ni altas.
+- [x] Aislamiento de tenants en Supabase auditado (un usuario jamás ve datos de otro).
+- [x] Latencia del webhook confirmada en $< 200\text{ ms}$.
+- [x] Aprobación de los subagentes `security-auditor` y `code-reviewer`.
 **Verification:**
-- [ ] Reporte de seguridad limpio y tests de latencia pasando.
+- [x] Reporte de seguridad limpio y tests de latencia pasando.
 **Dependencies:** Task 13  
 **Files likely touched:**
 - `SECURITY.md`
