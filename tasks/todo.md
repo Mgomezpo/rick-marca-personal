@@ -170,11 +170,11 @@
 ### Task 8: Módulo de Auditoría de Cuenta Propia y Aprendizajes (`routine-reporter`)
 **Description:** Implementar el servicio que audita las publicaciones del propio creador, mide su rendimiento contra su mediana personal, genera aprendizajes (`procedural_learnings`) y arma el reporte estratégico semanal.
 **Acceptance criteria:**
-- [ ] Función `audit_personal_account(posts, median)` que identifica aciertos y fallos propios.
-- [ ] Generación automática de `LearningItem` para guardar en base de datos.
-- [ ] Formateador del reporte semanal conciso para WhatsApp (1-2 veces por semana).
+- [x] Función `audit_personal_account(posts, median)` que identifica aciertos y fallos propios.
+- [x] Generación automática de `LearningItem` para guardar en base de datos.
+- [x] Formateador del reporte semanal conciso para WhatsApp (1-2 veces por semana).
 **Verification:**
-- [ ] Tests pasan: `pytest -v tests/test_routine_reporter.py`
+- [x] Tests pasan: `pytest -v tests/test_routine_reporter.py`
 **Dependencies:** Task 3, Task 4  
 **Files likely touched:**
 - `src/agents/routine.py`
