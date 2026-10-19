@@ -70,6 +70,48 @@ class ConversationMessage(BaseModel):
     timestamp: Optional[str] = None
 
 
+class BrandPillarDistribution(BaseModel):
+    """Distribution and balance of personal brand pillars."""
+    pillar_name: str = Field(..., description="Nombre del pilar de contenido")
+    target_percentage: float = Field(..., description="Porcentaje meta de la estrategia (ej. 40%)")
+    actual_percentage: float = Field(..., description="Porcentaje real observado en posts recientes")
+    post_count: int = Field(default=0, description="Número de posts recientes dedicados al pilar")
+    status: str = Field(default="balanced", description="'balanced', 'over_indexed', 'deserted'")
+
+
+class BrandHealthReport(BaseModel):
+    """Diagnostic audit of personal brand positioning, authority and voice."""
+    user_id: str = Field(..., description="Identificador del creador")
+    overall_score: float = Field(..., description="Puntaje de salud de marca de 0 a 10")
+    pillars: List[BrandPillarDistribution] = Field(default_factory=list, description="Desglose por pilares")
+    voice_drift_detected: bool = Field(default=False, description="Flag si la voz se alejó del tono auténtico")
+    voice_drift_notes: str = Field(default="", description="Explicación del desvío de tono o ángulo")
+    key_recommendation: str = Field(..., description="Recomendación estratégica principal")
+    suggested_action: str = Field(..., description="Acción táctica inmediata (ej. 'crear_demostracion_mecanismo')")
+
+
+class ProactiveSpark(BaseModel):
+    """Proactive content idea or angle proposed to the creator with market backing."""
+    spark_id: str = Field(..., description="ID único de la propuesta")
+    source_referent: str = Field(..., description="Handle del referente de cabecera que detonó la idea")
+    referent_hook_text: str = Field(..., description="Hook original del referente")
+    relative_performance: float = Field(..., description="Rendimiento relativo (R >= 2.0x)")
+    adapted_angle: str = Field(..., description="Ángulo adaptado al nicho y tesis del creador")
+    suggested_hook: str = Field(..., description="Propuesta concreta de gancho en las palabras del creador")
+    target_pillar: str = Field(..., description="Pilar de marca que fortalece")
+    confidence: float = Field(default=0.9, description="Confianza empírica del patrón (0 a 1)")
+
+
+class GovernorDecision(BaseModel):
+    """Outcome of the Anti-Spam Governor evaluation."""
+    allowed: bool = Field(..., description="Si se autoriza el envío del mensaje proactivo")
+    reason: str = Field(..., description="Motivo de la decisión o rechazo")
+    hours_since_last_ping: float = Field(..., description="Horas transcurridas desde el último mensaje de RICK")
+    current_local_hour: int = Field(..., description="Hora local actual del usuario (0-23)")
+    silence_streak: int = Field(default=0, description="Racha de mensajes proactivos sin respuesta del usuario")
+    backoff_cooldown_hours: float = Field(default=24.0, description="Horas de espera obligatorias aplicadas")
+
+
 class GraphState(TypedDict, total=False):
     """State definition for the LangGraph / Graph Engine."""
     user_id: str
@@ -85,6 +127,12 @@ class GraphState(TypedDict, total=False):
     iteration_count: int
     final_response: Optional[str]
     error: Optional[str]
+    # Proactive loop extensions
+    trigger_type: Optional[str]  # 'user_message', 'brand_health_audit', 'market_spark', 'trench_inquiry', 'post_mortem'
+    proactive_context: Optional[Dict[str, Any]]
+    brand_health_report: Optional[BrandHealthReport]
+    proactive_spark: Optional[ProactiveSpark]
+    governor_decision: Optional[GovernorDecision]
 
 
 def create_initial_state(user_id: str, handle: str = "") -> GraphState:
@@ -106,6 +154,11 @@ def create_initial_state(user_id: str, handle: str = "") -> GraphState:
         iteration_count=0,
         final_response=None,
         error=None,
+        trigger_type="user_message",
+        proactive_context={},
+        brand_health_report=None,
+        proactive_spark=None,
+        governor_decision=None,
     )
 
 
@@ -114,3 +167,4 @@ def update_state(state: GraphState, **updates: Any) -> GraphState:
     new_state = state.copy()
     new_state.update(updates)
     return new_state
+
