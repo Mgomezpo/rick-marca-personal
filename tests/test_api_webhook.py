@@ -8,9 +8,11 @@ from src.graph.state import (
     LearningItem,
     ScriptDraft,
     ScriptBlock,
+    ConversationMessage,
 )
 from src.db.repository import SupabaseRepository
 from src.api.app import app
+from src.api.webhook import send_whatsapp_message
 
 
 @pytest.fixture
@@ -130,3 +132,137 @@ def test_supabase_multitenant_isolation():
     retrieved_b = repo.get_creator_profile(user_id="user_B")
     assert retrieved_b.instagram_handle == "creator_b"
     assert retrieved_b.user_id == "user_B"
+
+
+def test_supabase_conversation_persistence_and_isolation():
+    repo = SupabaseRepository()
+
+    # User 1 sends a message
+    msg1 = ConversationMessage(role="user", content="Hola RICK")
+    repo.save_message("user_101", msg1)
+
+    # User 2 sends a message
+    msg2 = ConversationMessage(role="user", content="Qué tal")
+    repo.save_message("user_102", msg2)
+
+    conv_1 = repo.get_conversation("user_101")
+    conv_2 = repo.get_conversation("user_102")
+
+    assert len(conv_1) == 1
+    assert conv_1[0].content == "Hola RICK"
+
+    assert len(conv_2) == 1
+    assert conv_2[0].content == "Qué tal"
+
+    # Save assistant reply for user 1
+    reply1 = ConversationMessage(role="assistant", content="Buen día.")
+    repo.save_message("user_101", reply1)
+
+    conv_1_updated = repo.get_conversation("user_101")
+    assert len(conv_1_updated) == 2
+    assert conv_1_updated[1].role == "assistant"
+
+    # User 2 conversation remains strictly 1 message
+    assert len(repo.get_conversation("user_102")) == 1
+
+
+def test_outbound_whatsapp_message_dispatcher(monkeypatch):
+    # Test dispatch when credentials are set
+    posted_data = {}
+
+    class MockResponse:
+        status_code = 200
+        def json(self):
+            return {"messages": [{"id": "wamid.mock123"}]}
+
+    def mock_post(url, headers=None, json=None, timeout=None):
+        posted_data["url"] = url
+        posted_data["headers"] = headers
+        posted_data["json"] = json
+        return MockResponse()
+
+    import httpx
+    monkeypatch.setattr(httpx, "post", mock_post)
+
+    success = send_whatsapp_message(
+        to_phone="54911223344",
+        text="Mira, aquí tienes el guion listo.",
+        phone_number_id="100200300",
+        token="test_token_xyz",
+    )
+
+    assert success is True
+    assert "100200300/messages" in posted_data["url"]
+    assert posted_data["headers"]["Authorization"] == "Bearer test_token_xyz"
+    assert posted_data["json"]["to"] == "54911223344"
+    assert posted_data["json"]["text"]["body"] == "Mira, aquí tienes el guion listo."
+
+
+def test_webhook_multi_turn_session_flow(client, monkeypatch):
+    """Verify that multiple consecutive webhooks for the same phone maintain conversation context."""
+    dispatched = []
+
+    def mock_send(to_phone, text, phone_number_id=None, token=None):
+        dispatched.append({"to": to_phone, "text": text})
+        return True
+
+    from src.api import webhook
+    monkeypatch.setattr(webhook, "send_whatsapp_message", mock_send)
+
+    phone = "54911998877"
+
+    def make_webhook_payload(body):
+        return {
+            "object": "whatsapp_business_account",
+            "entry": [
+                {
+                    "id": "WABA_ID",
+                    "changes": [
+                        {
+                            "value": {
+                                "messaging_product": "whatsapp",
+                                "metadata": {"phone_number_id": "100200300"},
+                                "contacts": [{"wa_id": phone, "profile": {"name": "Miguel"}}],
+                                "messages": [
+                                    {
+                                        "from": phone,
+                                        "id": f"wamid.{time.time()}",
+                                        "type": "text",
+                                        "text": {"body": body},
+                                    }
+                                ],
+                            },
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
+        }
+
+    # Turn 1: Greeting
+    res1 = client.post("/webhook/whatsapp", json=make_webhook_payload("Hola RICK"))
+    assert res1.status_code == 200
+
+    # Turn 2: Vague anecdote
+    res2 = client.post(
+        "/webhook/whatsapp",
+        json=make_webhook_payload("Ayer tuve un problema grave con un cliente que canceló."),
+    )
+    assert res2.status_code == 200
+
+    # Turn 3: Scene details
+    res3 = client.post(
+        "/webhook/whatsapp",
+        json=make_webhook_payload("En la reunión me reclamó por las 4 horas de retraso y me desesperé."),
+    )
+    assert res3.status_code == 200
+
+    # Verify conversation history was persisted for this user
+    user_id = f"wa_{phone}"
+    stored_msgs = webhook.repo.get_conversation(user_id)
+    assert len(stored_msgs) >= 3
+    # Check that messages include both user and assistant roles
+    roles = [m.role for m in stored_msgs]
+    assert "user" in roles
+    assert "assistant" in roles
+

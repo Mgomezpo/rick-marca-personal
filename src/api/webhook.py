@@ -14,9 +14,54 @@ repo = SupabaseRepository()
 engine = RickGraphEngine()
 
 
+def send_whatsapp_message(
+    to_phone: str,
+    text: str,
+    phone_number_id: Optional[str] = None,
+    token: Optional[str] = None,
+) -> bool:
+    """
+    Dispatch text message to WhatsApp Cloud API.
+    Returns True if delivered or simulated successfully.
+    """
+    phone_id = phone_number_id or os.getenv("WHATSAPP_PHONE_NUMBER_ID")
+    auth_token = token or os.getenv("WHATSAPP_TOKEN")
+
+    if not phone_id or not auth_token:
+        logger.info(f"[SIMULATED WHATSAPP OUTBOUND] To: {to_phone} | Message: {text[:60]}...")
+        return True
+
+    url = f"https://graph.facebook.com/v19.0/{phone_id}/messages"
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": to_phone,
+        "type": "text",
+        "text": {"preview_url": False, "body": text},
+    }
+
+    try:
+        import httpx
+        res = httpx.post(url, headers=headers, json=payload, timeout=10.0)
+        if res.status_code in (200, 201):
+            logger.info(f"WhatsApp message dispatched to {to_phone} successfully.")
+            return True
+        else:
+            logger.error(f"WhatsApp API returned error {res.status_code}: {res.text}")
+            return False
+    except Exception as e:
+        logger.error(f"Failed to dispatch WhatsApp message to {to_phone}: {e}")
+        return False
+
+
 def process_whatsapp_background(payload: Dict[str, Any]) -> None:
     """
     Background worker that runs the full RICK graph without blocking the HTTP ACK.
+    Maintains conversation persistence across turns and dispatches outbound responses.
     """
     try:
         entries = payload.get("entry", [])
@@ -48,8 +93,14 @@ def process_whatsapp_background(payload: Dict[str, Any]) -> None:
                     # Load previous learnings from Supabase
                     state["learnings"] = repo.get_learnings(user_id)
 
-                    # Append user message
-                    state["messages"].append(ConversationMessage(role="user", content=text_body))
+                    # Persist user message and load full conversation history
+                    user_msg = ConversationMessage(
+                        role="user",
+                        content=text_body,
+                        timestamp=str(msg.get("timestamp", "")),
+                    )
+                    repo.save_message(user_id, user_msg)
+                    state["messages"] = repo.get_conversation(user_id)
 
                     # Run graph
                     final_state = engine.run(state)
@@ -63,7 +114,17 @@ def process_whatsapp_background(payload: Dict[str, Any]) -> None:
                     if draft:
                         repo.save_piece(user_id, draft)
 
-                    logger.info(f"Processed message for {user_id}: response ready.")
+                    # Persist assistant reply and dispatch outbound message to WhatsApp
+                    final_response = final_state.get("final_response")
+                    if final_response:
+                        assistant_msg = ConversationMessage(
+                            role="assistant",
+                            content=final_response,
+                        )
+                        repo.save_message(user_id, assistant_msg)
+                        send_whatsapp_message(to_phone=sender_phone, text=final_response)
+
+                    logger.info(f"Processed message for {user_id}: response ready and dispatched.")
     except Exception as e:
         logger.error(f"Error in WhatsApp background processor: {e}")
 
