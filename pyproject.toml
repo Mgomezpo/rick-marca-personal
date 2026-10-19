@@ -1,6 +1,6 @@
 [project]
 name = "rick-multitenant"
-version = "0.1.0"
+version = "1.0.0"
 description = "Motor de agentes multitenant para RICK en WhatsApp con Graph y Loop Engineering"
 authors = [{ name = "Miguel Gomez" }]
 readme = "README.md"
@@ -12,6 +12,7 @@ dependencies = [
     "httpx>=0.27.0",
     "python-dotenv>=1.0.0",
     "supabase>=2.30.0",
+    "psutil>=5.9.0",
 ]
 
 [project.optional-dependencies]
