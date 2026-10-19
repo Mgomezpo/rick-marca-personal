@@ -186,10 +186,10 @@
 ### Task 9: Compilación del Grafo y Formateador Conversacional de WhatsApp
 **Description:** Unir todos los nodos y aristas en `src/graph/engine.py` y crear el formateador de salida que convierte el guion y los datos en un mensaje de WhatsApp natural, limpio y sin caracteres extraños.
 **Acceptance criteria:**
-- [ ] Grafo compilado ejecutable de inicio a fin.
-- [ ] Formato de mensaje WhatsApp limpio: Hook, Desarrollo y Cierre legibles, con nota concisa de simulación (sin markdown recargado).
+- [x] Grafo compilado ejecutable de inicio a fin.
+- [x] Formato de mensaje WhatsApp limpio: Hook, Desarrollo y Cierre legibles, con nota concisa de simulación (sin markdown recargado).
 **Verification:**
-- [ ] Tests pasan: `pytest -v tests/test_graph_engine.py`
+- [x] Tests pasan: `pytest -v tests/test_graph_engine.py`
 **Dependencies:** Task 7, Task 8  
 **Files likely touched:**
 - `src/graph/engine.py`
