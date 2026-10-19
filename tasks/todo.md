@@ -309,13 +309,13 @@
 ### Task 15: Merge a `main`, Tagging Semántico `v1.0.0` y Changelog (`git-workflow-and-versioning`)
 **Description:** Finalizar el flujo de trabajo de Git fusionando la rama `feature/rick-agent-engine` en `main`, crear la etiqueta de versión semántica `v1.0.0`, y documentar el `CHANGELOG.md` con todos los componentes entregados.
 **Acceptance criteria:**
-- [ ] Merge limpio sin conflictos de `feature/rick-agent-engine` a `main`.
-- [ ] Git tag `v1.0.0` creado.
-- [ ] `CHANGELOG.md` actualizado con el detalle de las capacidades entregadas.
-- [ ] Working tree limpio en `main`.
+- [x] Merge limpio sin conflictos de `feature/rick-agent-engine` a `main`.
+- [x] Git tag `v1.0.0` creado.
+- [x] `CHANGELOG.md` actualizado con el detalle de las capacidades entregadas.
+- [x] Working tree limpio en `main`.
 **Verification:**
-- [ ] `git branch --show-current` devuelve `main`.
-- [ ] `git tag -l` muestra `v1.0.0`.
+- [x] `git branch --show-current` devuelve `main`.
+- [x] `git tag -l` muestra `v1.0.0`.
 **Dependencies:** Task 14  
 **Files likely touched:**
 - `CHANGELOG.md`  
@@ -324,9 +324,9 @@
 ---
 
 ## Checkpoint 6: Certificación y Release Final (`v1.0.0`)
-- [ ] Repositorio en rama `main` con etiqueta `v1.0.0`.
-- [ ] Auditoría de seguridad y rendimiento aprobada.
-- [ ] Motor RICK en producción, conectado a WhatsApp y funcionando con calidad máxima.
+- [x] Repositorio en rama `main` con etiqueta `v1.0.0`.
+- [x] Auditoría de seguridad y rendimiento aprobada.
+- [x] Motor RICK en producción, conectado a WhatsApp y funcionando con calidad máxima.
 
 
 
