@@ -5,6 +5,10 @@ from src.agents.rick import rick_strategist_node
 from src.agents.guionista import guionista_node
 from src.agents.evaluator import evaluator_node
 from src.agents.routine import routine_reporter_node
+from src.agents.brand_health import brand_health_node
+from src.agents.spark import proactive_spark_node
+from src.agents.trench import trench_inquiry_node
+from src.graph.governor import governor_node
 from src.graph.edges import quality_loop_router
 from src.graph.formatter import format_script_whatsapp
 
@@ -12,10 +16,12 @@ from src.graph.formatter import format_script_whatsapp
 class RickGraphEngine:
     """
     Compiles and executes the RICK multi-tenant state graph:
-    1. Rick Strategist & Intent Router (Rubin mayeutics)
-    2. Routine Reporter (Account audit & procedural learnings)
-    3. Guionista + Quality Loop (Anti-plagiarism, Anti-slop, Simulation)
-    4. WhatsApp Formatter (Clean conversational output)
+    1. Proactive vs Reactive Router (Trigger Type & Governor)
+    2. Proactive Loops (Brand Health, Market Sparks, Trench Inquiry)
+    3. Rick Strategist & Intent Router (Rubin mayeutics)
+    4. Routine Reporter (Account audit & procedural learnings)
+    5. Guionista + Quality Loop (Anti-plagiarism, Anti-slop, Simulation)
+    6. WhatsApp Formatter (Clean conversational output)
     """
 
     def run(self, initial_state: GraphState) -> GraphState:
@@ -23,7 +29,32 @@ class RickGraphEngine:
         Execute the graph end-to-end starting from initial_state.
         """
         state = initial_state
+        trigger_type = state.get("trigger_type", "user_message")
 
+        # -------------------------------------------------------------
+        # Branch A: Proactive Autonomous Loops (Cron, Anomaly, Inactivity)
+        # -------------------------------------------------------------
+        if trigger_type != "user_message":
+            # 1. Pass through Anti-Spam Governor Node
+            state = governor_node(state)
+            gov = state.get("governor_decision")
+            if not gov or not gov.allowed:
+                # Proactive outreach suppressed by governor
+                return state
+
+            # 2. Route to specialized proactive node
+            if trigger_type == "brand_health_audit":
+                return brand_health_node(state)
+            elif trigger_type == "market_spark":
+                return proactive_spark_node(state)
+            elif trigger_type == "trench_inquiry":
+                return trench_inquiry_node(state)
+
+            return state
+
+        # -------------------------------------------------------------
+        # Branch B: Reactive Conversational Flow (User-Initiated)
+        # -------------------------------------------------------------
         # Step 1: Execute RICK Strategist & Router
         state = rick_strategist_node(state)
         intent = state.get("current_intent", "chat")
@@ -60,3 +91,4 @@ class RickGraphEngine:
                 state = update_state(state, final_response=final_text)
 
         return state
+

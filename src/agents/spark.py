@@ -83,6 +83,15 @@ def proactive_spark_node(state: GraphState) -> GraphState:
     thesis = ctx.get("thesis", "Sistemas determinísticos sobre caos")
 
     if not pattern:
+        try:
+            from src.services.radar_ingestion import radar_ingestion_service
+            fresh = radar_ingestion_service.fetch_fresh_radar_patterns(user_id=user_id)
+            if fresh and not fresh.get("is_fallback") and fresh.get("top_pattern"):
+                pattern = fresh["top_pattern"]
+        except Exception:
+            pass
+
+    if not pattern:
         # Fallback synthetic pattern if none supplied
         pattern = WinningPattern(
             pattern_id="fallback_spark",
@@ -101,6 +110,12 @@ def proactive_spark_node(state: GraphState) -> GraphState:
         creator_thesis=thesis,
         source_referent=source_ref,
     )
+
+    try:
+        from src.services.radar_ingestion import radar_ingestion_service
+        radar_ingestion_service.record_used_creator(user_id, source_ref)
+    except Exception:
+        pass
 
     formatted = format_spark_whatsapp(spark, handle)
 

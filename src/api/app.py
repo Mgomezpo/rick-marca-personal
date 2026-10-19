@@ -44,3 +44,49 @@ def health_check():
             "percent_used": memory_info.percent,
         },
     }
+
+
+from typing import Optional, Dict, Any
+from pydantic import BaseModel, Field
+from src.services.proactive_worker import run_proactive_cycle_for_tenant
+from src.api.webhook import send_whatsapp_message
+
+
+class ProactiveTickRequest(BaseModel):
+    """Payload for invoking a proactive cycle for a creator."""
+    user_id: str
+    trigger_type: str = Field(default="market_spark", description="brand_health_audit, market_spark, trench_inquiry")
+    phone_number: Optional[str] = Field(default=None, description="Optional phone number to dispatch WhatsApp")
+    proactive_context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+
+@app.post("/api/proactive/tick", tags=["Proactive Loops"])
+def proactive_tick(payload: ProactiveTickRequest):
+    """
+    Triggers an autonomous proactive cycle for a tenant (called via Cron / Timer).
+    Passes through the Anti-Spam Governor before sending any WhatsApp message.
+    """
+    profile = repo.get_creator_profile(payload.user_id)
+    result = run_proactive_cycle_for_tenant(
+        user_id=payload.user_id,
+        trigger_type=payload.trigger_type,
+        creator_profile=profile,
+        proactive_context=payload.proactive_context,
+    )
+
+    # If approved and message produced, persist to conversation history for multi-turn context
+    if result["dispatched"] and result.get("message"):
+        from src.graph.state import ConversationMessage
+        repo.save_message(
+            payload.user_id,
+            ConversationMessage(
+                role="assistant",
+                content=result["message"],
+            ),
+        )
+        if payload.phone_number:
+            send_whatsapp_message(to_phone=payload.phone_number, text=result["message"])
+
+    return result
+
+

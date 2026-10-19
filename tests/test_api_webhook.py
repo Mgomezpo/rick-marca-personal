@@ -11,7 +11,7 @@ from src.graph.state import (
     ConversationMessage,
 )
 from src.db.repository import SupabaseRepository
-from src.api.app import app
+from src.api.app import app, repo
 from src.api.webhook import send_whatsapp_message
 
 
@@ -265,4 +265,35 @@ def test_webhook_multi_turn_session_flow(client, monkeypatch):
     roles = [m.role for m in stored_msgs]
     assert "user" in roles
     assert "assistant" in roles
+
+
+def test_api_proactive_tick_endpoint(client):
+    payload = {
+        "user_id": "test_creator_api",
+        "trigger_type": "market_spark",
+        "phone_number": "+573001112233",
+        "proactive_context": {
+            "hours_since_last_ping": 35.0,
+            "current_local_hour": 14,
+            "silence_streak": 0,
+            "confidence": 0.94,
+            "source_referent": "@casidonovan",
+            "thesis": "Arquitectura determinística sobre prompts caóticos",
+        },
+    }
+
+    response = client.post("/api/proactive/tick", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["dispatched"] is True
+    assert data["governor_allowed"] is True
+    assert data["message"] is not None
+    assert "@casidonovan" in data["message"]
+
+    # Verify multi-turn retention in repository
+    history = repo.get_conversation("test_creator_api")
+    assert len(history) > 0
+    assert history[-1].role == "assistant"
+    assert "@casidonovan" in history[-1].content
+
 

@@ -19,7 +19,7 @@
 - [x] **Task 3.3:** Suite de pruebas en `tests/test_wide_radar.py` validando eliminación de duplicados, recencia y rotación.
 
 ### Fase 4: Desacople de Ingesta y Orquestación del Grafo (`graph-engineering` + `ci-cd-and-automation`)
-- [ ] **Task 4.1:** Servicio de ingesta desacoplado en background para el radar.
-- [ ] **Task 4.2:** Integración con `RickGraphEngine` garantizando consultas a la matriz indexada en $< 50$ms sin scraping en vivo durante la llamada.
-- [ ] **Task 4.3:** Endpoint `POST /api/proactive/tick` en `src/api/app.py` preparado para triggers periódicos.
-- [ ] **Task 4.4:** Suite completa de pruebas en verde (`pytest -v`).
+- [x] **Task 4.1:** Servicio de ingesta desacoplado en background para el radar.
+- [x] **Task 4.2:** Integración con `RickGraphEngine` garantizando consultas a la matriz indexada en $< 50$ms sin scraping en vivo durante la llamada.
+- [x] **Task 4.3:** Endpoint `POST /api/proactive/tick` en `src/api/app.py` preparado para triggers periódicos.
+- [x] **Task 4.4:** Suite completa de pruebas en verde (`pytest -v`).
