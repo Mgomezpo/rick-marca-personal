@@ -266,12 +266,12 @@
 ### Task 13: Despliegue en Producción (Cloud Run / HTTPS) y Smoke Test en Vivo
 **Description:** Desplegar el contenedor a producción (Cloud Run / servidor cloud con HTTPS), obtener la URL pública de webhook y ejecutar un smoke test enviando un payload real de verificación contra la URL pública en vivo.
 **Acceptance criteria:**
-- [ ] Servicio desplegado en producción con URL pública segura (`https://...`).
-- [ ] Healthcheck `GET /health` devuelve 200 OK en vivo.
-- [ ] Smoke test del endpoint webhook responde en menos de 200 ms en vivo.
-- [ ] URL documentada y lista para vincular a Meta WhatsApp Business API.
+- [x] Servicio desplegado en producción con URL pública segura (`https://...`).
+- [x] Healthcheck `GET /health` devuelve 200 OK en vivo.
+- [x] Smoke test del endpoint webhook responde en menos de 200 ms en vivo.
+- [x] URL documentada y lista para vincular a Meta WhatsApp Business API.
 **Verification:**
-- [ ] Petición HTTP en vivo a la URL de producción responde 200 OK.
+- [x] Petición HTTP en vivo a la URL de producción responde 200 OK.
 **Dependencies:** Task 12  
 **Files likely touched:**
 - `deploy.sh` o configuración de despliegue
@@ -281,9 +281,9 @@
 ---
 
 ## Checkpoint 5: Despliegue en Producción 100% Verificado
-- [ ] URL pública HTTPS operativa y respondiendo.
-- [ ] Conectividad verificada con Supabase y procesamiento asíncrono activo.
-- [ ] RICK en vivo y disponible para recibir mensajes de WhatsApp en producción.
+- [x] URL pública HTTPS operativa y respondiendo.
+- [x] Conectividad verificada con Supabase y procesamiento asíncrono activo.
+- [x] RICK en vivo y disponible para recibir mensajes de WhatsApp en producción.
 
 ---
 
