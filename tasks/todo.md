@@ -86,11 +86,11 @@
 ### Task 4: Extractor de Patrones Ganadores y Doble Radar (Cabecera + Discovery)
 **Description:** Implementar el extractor de las 10 columnas y el motor de descubrimiento que busca tanto en los referentes de cabecera guardados en Supabase como en el radar amplio del nicho.
 **Acceptance criteria:**
-- [ ] Modelo `MatrixRow` con las 10 columnas validadas.
-- [ ] Extractor `find_winning_patterns(rows)` que agrupa por tipo de hook + formato + emoción con $R \ge 1.5$.
-- [ ] Soporte para consulta de referentes fijos (`brand_referents`) y descubrimiento de tendencias.
+- [x] Modelo `MatrixRow` con las 10 columnas validadas.
+- [x] Extractor `find_winning_patterns(rows)` que agrupa por tipo de hook + formato + emoción con $R \ge 1.5$.
+- [x] Soporte para consulta de referentes fijos (`brand_referents`) y descubrimiento de tendencias.
 **Verification:**
-- [ ] Tests pasan: `pytest -v tests/test_matrix_analyzer.py`
+- [x] Tests pasan: `pytest -v tests/test_matrix_analyzer.py`
 **Dependencies:** Task 3  
 **Files likely touched:**
 - `src/matrix/models.py`
@@ -101,8 +101,8 @@
 ---
 
 ## Checkpoint 2: Motor de Matriz Completamente Operativo
-- [ ] `pytest -v tests/test_matrix_metrics.py tests/test_matrix_analyzer.py` en verde.
-- [ ] Detección precisa de patrones ganadores con evidencia $\ge 3$ piezas.
+- [x] `pytest -v tests/test_matrix_metrics.py tests/test_matrix_analyzer.py` en verde.
+- [x] Detección precisa de patrones ganadores con evidencia $\ge 3$ piezas.
 
 ---
 
