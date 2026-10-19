@@ -14,9 +14,9 @@
 - [x] **Task 2.3:** Validar en `tests/test_rick_node.py` y `tests/test_conversation_ux.py` el tono de equipo y ausencia de frases de consultor externo.
 
 ### Fase 3: Motor de Radar "Wide & Fresh" y Anti-Solapamiento (`api-and-interface-design` + `incremental-implementation`)
-- [ ] **Task 3.1:** Implementar función `sample_wide_radar` (tope de 3 posts recientes por creador sobre pool de 15–25 cuentas) en `src/matrix/analyzer.py`.
-- [ ] **Task 3.2:** Implementar memoria de rotación y exclusión de posts ya utilizados (`rotate_creator_patterns`).
-- [ ] **Task 3.3:** Suite de pruebas en `tests/test_wide_radar.py` validando eliminación de duplicados, recencia y rotación.
+- [x] **Task 3.1:** Implementar función `sample_wide_radar` (tope de 3 posts recientes por creador sobre pool de 15–25 cuentas) en `src/matrix/analyzer.py`.
+- [x] **Task 3.2:** Implementar memoria de rotación y exclusión de posts ya utilizados (`rotate_creator_patterns`).
+- [x] **Task 3.3:** Suite de pruebas en `tests/test_wide_radar.py` validando eliminación de duplicados, recencia y rotación.
 
 ### Fase 4: Desacople de Ingesta y Orquestación del Grafo (`graph-engineering` + `ci-cd-and-automation`)
 - [ ] **Task 4.1:** Servicio de ingesta desacoplado en background para el radar.

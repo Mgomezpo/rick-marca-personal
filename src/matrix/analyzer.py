@@ -114,3 +114,82 @@ class MarketRadar:
             "top_pattern": all_patterns[0],
             "is_fallback": False,
         }
+
+    def analyze_wide_radar(
+        self,
+        referents_rows: List[MatrixRow],
+        discovery_rows: List[MatrixRow],
+        max_posts_per_creator: int = 3,
+        excluded_post_ids: Optional[List[str]] = None,
+        recently_used_handles: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Executes wide & fresh analysis:
+        Capping posts per creator, filtering out previously used post_ids (anti-solapamiento),
+        and forcing rotation across creators.
+        """
+        combined = referents_rows + discovery_rows
+        sampled = sample_wide_radar(
+            combined,
+            max_posts_per_creator=max_posts_per_creator,
+            excluded_post_ids=excluded_post_ids,
+        )
+        rotated = rotate_creator_patterns(sampled, recently_used_handles)
+        patterns = find_winning_patterns(rotated)
+
+        if not patterns:
+            return {
+                "top_patterns": self.DEFAULT_PATTERNS,
+                "top_pattern": self.DEFAULT_PATTERNS[0],
+                "total_posts_considered": len(rotated),
+                "is_fallback": True,
+            }
+
+        return {
+            "top_patterns": patterns,
+            "top_pattern": patterns[0],
+            "total_posts_considered": len(rotated),
+            "is_fallback": False,
+        }
+
+
+def sample_wide_radar(
+    rows: List[MatrixRow],
+    max_posts_per_creator: int = 3,
+    excluded_post_ids: Optional[List[str]] = None,
+) -> List[MatrixRow]:
+    """
+    Inverts the scraping equation:
+    Instead of 40 videos from 2 creators (deep & repetitive),
+    samples top `max_posts_per_creator` (e.g. 3) from each creator across a wide pool.
+    Excludes previously used post IDs to eliminate duplicate analysis and overlap.
+    """
+    excluded = set(excluded_post_ids or [])
+    filtered_rows = [r for r in rows if r.post_id not in excluded]
+
+    by_creator: Dict[str, List[MatrixRow]] = defaultdict(list)
+    for r in filtered_rows:
+        by_creator[r.account_handle].append(r)
+
+    sampled: List[MatrixRow] = []
+    for handle, creator_rows in by_creator.items():
+        creator_rows.sort(key=lambda x: x.relative_performance, reverse=True)
+        sampled.extend(creator_rows[:max_posts_per_creator])
+
+    return sampled
+
+
+def rotate_creator_patterns(
+    rows: List[MatrixRow],
+    recently_used_handles: Optional[List[str]] = None,
+) -> List[MatrixRow]:
+    """
+    Prevents mono-creator bias by pushing recently used creator handles to the back,
+    forcing rotation across different creators.
+    """
+    recent = set(recently_used_handles or [])
+    fresh = [r for r in rows if r.account_handle not in recent]
+    cooldown = [r for r in rows if r.account_handle in recent]
+
+    return fresh + cooldown
+
