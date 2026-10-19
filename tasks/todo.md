@@ -128,11 +128,11 @@
 ### Task 6: Implementar el Nodo Guionista Técnico (Hook, Desarrollo, Cierre)
 **Description:** Crear el generador de guiones que monta la historia extraída por RICK sobre la estructura empírica de la matriz, desglosando cada bloque en `Texto` hablado, `Intención` psicológica y dirección de `Cámara`.
 **Acceptance criteria:**
-- [ ] Nodo `guionista_node(state)` con los tres bloques canónicos: `HOOK`, `DESARROLLO`, `CIERRE / CTA`.
-- [ ] Cada bloque incluye `Texto`, `Intención` y `Cámara`.
-- [ ] Calibrado a la duración en segundos del patrón ganador.
+- [x] Nodo `guionista_node(state)` con los tres bloques canónicos: `HOOK`, `DESARROLLO`, `CIERRE / CTA`.
+- [x] Cada bloque incluye `Texto`, `Intención` y `Cámara`.
+- [x] Calibrado a la duración en segundos del patrón ganador.
 **Verification:**
-- [ ] Tests pasan: `pytest -v tests/test_guionista.py`
+- [x] Tests pasan: `pytest -v tests/test_guionista.py`
 **Dependencies:** Task 4, Task 5  
 **Files likely touched:**
 - `src/agents/guionista.py`
