@@ -88,11 +88,11 @@ def rick_strategist_node(state: GraphState) -> GraphState:
         # Rubin Protocol: Trench inquiry (1 question per turn)
         # Check if user already gave the concrete scene (what happened in the moment)
         scene_markers = ["reunión", "reunion", "oficina", "llamada", "pantalla", "apertura", "entró", "entro", "horas", "mirando", "estaba", "abrí", "abri"]
-        has_scene = len(user_msgs) >= 3 and any(w in story.lower() for w in scene_markers)
+        has_scene = any(w in story.lower() for w in scene_markers)
 
         # Check if user explained the real friction / root error
-        friction_markers = ["el error", "la fricción", "la friccion", "no validé", "no valide", "quebró", "quebro", "desesperé", "desespere", "mentira"]
-        has_friction = len(user_msgs) >= 4 and any(w in story.lower() for w in friction_markers)
+        friction_markers = ["el error", "la fricción", "la friccion", "no validé", "no valide", "quebró", "quebro", "mentira", "mi culpa", "la causa"]
+        has_friction = any(w in story.lower() for w in friction_markers)
 
         if not has_scene:
             response = "¿Qué pasó exactamente en ese momento? Cuéntame la escena sin adornos."

@@ -94,3 +94,19 @@ def test_rick_node_inquiry_asks_one_question():
     question_marks = response.count("?")
     assert question_marks == 1
     assert result_state["story_extracted"] is not None
+
+
+def test_rick_node_direct_transition_when_scene_and_friction_provided():
+    state = create_initial_state("user_1", "miguel_gomezpo")
+    state["messages"].append(
+        ConversationMessage(
+            role="user",
+            content="Ayer en la reunión con el cliente el error que cometí fue no validar la oferta.",
+        )
+    )
+    state["current_intent"] = "extract_story"
+
+    result_state = rick_strategist_node(state)
+    assert result_state["current_intent"] == "generate_script"
+    assert "guion" in result_state["final_response"].lower()
+
