@@ -508,8 +508,8 @@ def execute_tool_call(
 
         elif tool_name == "consultar_posts_instagram":
             handle = args.get("handle", "")
+            profile = db.get_user_profile(user_id) or {}
             if not handle:
-                profile = db.get_user_profile(user_id) or {}
                 handle = profile.get("analytics_username") or profile.get("instagram_handle") or ""
             if not handle:
                 return json.dumps({
@@ -525,16 +525,28 @@ def execute_tool_call(
                     "status": "success",
                     "posts": reels[:5]
                 }, ensure_ascii=False)
-            elif footprint.get("summary"):
+            
+            # Degradación elegante: Si el scraping en vivo no trajo reels (ej. rate limit de Meta/Apify)
+            cached_context = footprint.get("summary") or profile.get("backstory") or ""
+            if cached_context:
                 return json.dumps({
-                    "status": "summary_only",
-                    "mensaje": "Scraper directo de Apify en pausa temporal por cuota. Huella y proyectos verificados del creador disponibles.",
-                    "huella_verificada": footprint["summary"]
+                    "status": "cached_context",
+                    "handle": handle,
+                    "mensaje": (
+                        f"El feed en vivo de @{handle} no devolvió reels recientes en este instante debido a protección de la red social. "
+                        f"DIRECTRIZ INQUEBRANTABLE PARA RICK: NO menciones scrapers, cuotas, APIs ni excusas técnicas de IA. "
+                        f"Habla con total naturalidad y autoridad de Head of Content apoyándote en el contexto que ya conocemos del creador, "
+                        f"o pregúntale directamente qué video, tema o anécdota quiere deconstruir hoy."
+                    ),
+                    "contexto_disponible": cached_context[:400]
                 }, ensure_ascii=False)
             else:
                 return json.dumps({
                     "status": "not_found",
-                    "mensaje": f"No se pudo consultar el feed en vivo de @{handle}. Pídele al creador que te comparta el enlace o anécdota directamente en un audio."
+                    "mensaje": (
+                        f"No hay piezas recientes accesibles en vivo para @{handle}. "
+                        f"DIRECTRIZ PARA RICK: NO des excusas técnicas. Propón trabajar sobre una anécdota o idea de contenido reciente."
+                    )
                 }, ensure_ascii=False)
 
         else:

@@ -67,7 +67,7 @@ class InstagramService:
         }
 
         try:
-            with httpx.Client(timeout=90.0) as client:
+            with httpx.Client(timeout=10.0) as client:
                 res = client.post(actor_url, json=payload)
                 if res.status_code not in (200, 201):
                     logger.error(f"Error Apify ({res.status_code}): {res.text[:200]}")
@@ -122,7 +122,7 @@ class InstagramService:
         profile_info = {}
         # 1. Perfil y Biografía
         try:
-            with httpx.Client(timeout=25.0) as client:
+            with httpx.Client(timeout=6.0) as client:
                 r_prof = client.post(
                     f"https://{config.RAPIDAPI_HOST}/ig_get_fb_profile.php",
                     headers=headers,
@@ -143,7 +143,7 @@ class InstagramService:
         # 2. Reels para capturar reproducciones reales
         reels_by_code = {}
         try:
-            with httpx.Client(timeout=25.0) as client:
+            with httpx.Client(timeout=6.0) as client:
                 r_reels = client.post(
                     f"https://{config.RAPIDAPI_HOST}/get_ig_user_reels.php",
                     headers=headers,

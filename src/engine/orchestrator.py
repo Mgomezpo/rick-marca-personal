@@ -109,13 +109,47 @@ class RickOrchestrator:
         active_ctx_md = self.vfs.read_file("memorias/active_context.md", user_id)
         recent_scripts_md = self.vfs.read_file("produccion/scripts", user_id)
 
+        # Construcción de la memoria base del creador (SIEMPRE DISPONIBLE PARA EL ARNES)
+        creator_name = profile.get("creator_name") or ""
+        main_niche = profile.get("main_niche") or ""
+        passion = profile.get("passion") or ""
+        unique_angle = profile.get("unique_angle") or ""
+        backstory = profile.get("backstory") or ""
+
+        creator_summary_parts = []
+        if known_handle:
+            creator_summary_parts.append(f"- **Handle en redes:** @{known_handle}")
+        if creator_name:
+            creator_summary_parts.append(f"- **Nombre del Creador:** {creator_name}")
+        if main_niche:
+            creator_summary_parts.append(f"- **Nicho:** {main_niche}")
+        if passion:
+            creator_summary_parts.append(f"- **Obsesión / Pasión:** {passion}")
+        if unique_angle:
+            creator_summary_parts.append(f"- **Enemigo Común / Ángulo Único:** {unique_angle}")
+        if backstory:
+            creator_summary_parts.append(f"- **Huella / Backstory Verificado:**\n{backstory}")
+
+        creator_identity_block = "\n".join(creator_summary_parts) if creator_summary_parts else "Aún no hay datos adicionales registrados."
+
+        # Bloque de memoria viva acumulada (inyección continua sin amnesia)
+        persistent_memory_block = (
+            f"### RADIOGRAFÍA Y LORE DEL CREADOR (PERFIL EN SUPABASE):\n{creator_identity_block}\n\n"
+            f"### LORE DETALLADO (VFS):\n{lore_md}\n\n"
+            f"### ADN DE VOZ Y POSICIONAMIENTO:\n{voice_dna_md}\n\n{positioning_md}\n\n"
+            f"### MEMORIA ACTIVA Y ESTADO ACTUAL:\n{active_ctx_md}\n\n"
+            f"### GUIONES Y PIEZAS EN LA MESA:\n{recent_scripts_md}\n"
+        )
+
         # 2. Inyección dinámica según estado del binario en BD
         if not is_onboarded:
             interview_skill = skills_loader.get_skill("creator-interview") or ""
             handle_status = f"Usuario de Instagram ya registrado: @{known_handle}" if known_handle else "Aún no ha proporcionado su usuario de redes."
             context_block = (
+                f"{persistent_memory_block}\n"
                 f"### ESTADO DEL CREADOR: EN ONBOARDING SOCRÁTICO (skills/creator-interview)\n"
-                f"{handle_status}\n\n"
+                f"{handle_status}\n"
+                f"ATENCIÓN RICK: Si ya hay huella, backstory o handle cargados arriba, ÚSALOS de inmediato. No preguntes lo que ya sabes; avanza hacia el quiebre de su historia o arranca el primer guion.\n\n"
                 f"### PROTOCOLO DE ONBOARDING (EL MÉTODO RUBIN):\n"
                 f"{interview_skill}\n\n"
                 f"### FLUJO CANÓNICO DE ONBOARDING (REGLA DE MÁXIMO 3 PREGUNTAS):\n"
@@ -141,10 +175,7 @@ class RickOrchestrator:
             )
         else:
             context_block = (
-                f"### RADIOGRAFÍA Y LORE DEL CREADOR (MULTI-TENANT):\n{lore_md}\n\n"
-                f"### ADN DE VOZ Y POSICIONAMIENTO:\n{voice_dna_md}\n\n{positioning_md}\n\n"
-                f"### MEMORIA ACTIVA Y ESTADO ACTUAL:\n{active_ctx_md}\n\n"
-                f"### GUIONES Y PIEZAS EN LA MESA:\n{recent_scripts_md}\n\n"
+                f"{persistent_memory_block}\n"
                 f"### ESTADO DEL CREADOR: CONSOLIDADO EN EL ESTUDIO (PRODUCCIÓN ACTIVA)\n"
                 f"El creador ya completó su onboarding y su identidad está asentada en el estudio.\n"
                 f"- Habla ÚNICAMENTE desde su lore y nicho real cargado arriba. NUNCA inventes clientes o proyectos ajenos.\n"
@@ -176,7 +207,12 @@ class RickOrchestrator:
             f"   - NUNCA imprimas nombres de funciones técnicas en el texto (como 'consultar_piezas_creador' o 'consultar_posts_instagram').\n"
             f"   - NUNCA imprimas plantillas con corchetes vacíos como '[Breve descripción]'.\n\n"
             f"7. PROHIBICIÓN TOTAL DE PREGUNTAS TÍMIDAS DE PERMISO:\n"
-            f"   NUNCA preguntes '¿Te gustaría que...?', '¿Te parece si...?', '¿Quieres que exploremos...?'. Eres el Head of Content de élite: actúa con criterio, propone la dirección con firmeza y da instrucciones claras y directas ('Dime X y te armo el guion ya mismo')."
+            f"   NUNCA preguntes '¿Te gustaría que...?', '¿Te parece si...?', '¿Quieres que exploremos...?'. Eres el Head of Content de élite: actúa con criterio, propone la dirección con firmeza y da instrucciones claras y directas ('Dime X y te armo el guion ya mismo').\n\n"
+            f"8. RADAR DE MERCADO Y ROL DE REFERENTES (REGLA INQUEBRANTABLE):\n"
+            f"   - Eres el Head of Content y Productor Ejecutivo. SIEMPRE mantienes un radar activo de creadores de referencia y formatos ganadores en el nicho del creador.\n"
+            f"   - Si el creador te pregunta '¿a qué creadores sigues?', '¿cuáles son tus referentes?' o qué estás estudiando: PROHIBIDO TERMINANTEMENTE decir 'No sigo a creadores', 'Soy una IA' o dar descargos robóticos.\n"
+            f"   - Responde con total autoridad y naturalidad explicando que como director creativo monitoreas a los creadores referentes y las piezas virales del nicho, deconstruyendo sus ganchos de retención y estructuras narrativas para aplicar lo que funciona en el canal.\n"
+            f"   - NUNCA rompas la cuarta pared. Jamás te refieras a ti mismo como un 'asistente virtual', 'modelo de lenguaje' o 'IA que no puede navegar'."
         )
 
         try:

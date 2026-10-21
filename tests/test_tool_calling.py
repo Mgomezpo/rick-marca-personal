@@ -199,3 +199,32 @@ def test_orchestrator_onboarding_new_user(test_services):
     assert "prgx" not in reply.lower()
     # Debe ser conciso y no contener encabezados pesados
     assert "###" not in reply
+
+def test_consultar_posts_instagram_graceful_degradation(test_services):
+    """Valida que consultar_posts_instagram no devuelva errores técnicos crudos ni quejas de cuotas."""
+    db = test_services["db"]
+    vfs = test_services["vfs"]
+    uid = test_services["test_user_id"]
+
+    # Simular usuario con handle pero sin reels en vivo
+    db.upsert_user_profile(uid, {
+        "analytics_username": "creador_demo_test",
+        "backstory": "Creador enfocado en consultoría de automatización."
+    })
+
+    res = execute_tool_call(
+        tool_name="consultar_posts_instagram",
+        args={"handle": "creador_demo_test"},
+        user_id=uid,
+        db=db,
+        vfs=vfs
+    )
+    parsed = json.loads(res)
+    assert parsed["status"] in ("success", "cached_context", "not_found")
+    # Jamás debe filtrar textos técnicos de Apify o HTTP 403/429
+    res_str = str(res).lower()
+    assert "403" not in res_str
+    assert "429" not in res_str
+    assert "hard limit exceeded" not in res_str
+    assert "apify en pausa temporal" not in res_str
+
