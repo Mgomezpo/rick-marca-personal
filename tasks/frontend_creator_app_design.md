@@ -38,7 +38,7 @@ Los creadores piensan en voz alta mientras se maquillan, manejan o caminan. Escr
 * **Speech-to-Structured-Cards:** El usuario dicta libremente: *"Rick, quiero hacer un video sobre por qué dejé de usar base líquida y ahora uso serum con color"*, y el frontend transforma ese audio directamente en las 4 tarjetas Bento visuales en la pantalla.
 
 ### 4. Ergonomía en la "Zona del Pulgar" (Thumb-Zone)
-* El 90% de las acciones críticas (grabar nota de voz, cambiar de idea, deslizar al teleprompter) están ubicadas en el **tercio inferior de la pantalla**, accesibles con una sola mano sin forzar el pulgar.
+* El 90% de las acciones críticas (grabar nota de voz, afinar una idea, copiar el guion) están ubicadas en el **tercio inferior de la pantalla**, accesibles con una sola mano sin forzar el pulgar.
 * Modales rígidos reemplazados por **Interactive Bottom Sheets** deslizables hacia abajo.
 
 ### 5. Estética Editorial de Lujo (Calm Dark Mode)
@@ -63,7 +63,7 @@ graph TD
 ```
 
 ### 1. `idea-refine` & `interview-me`
-* **Para qué:** Mapear los flujos de creación paso a paso (desde que la creadora tiene una idea vaga en un audio hasta que se graba en el teleprompter).
+* **Para qué:** Mapear los flujos de creación paso a paso (desde que la creadora tiene una idea vaga en un audio hasta que el guion queda listo y aprobado).
 * **Entregable:** Mapa de estados de la interfaz y paleta de tokens semánticos de diseño.
 
 ### 2. `frontend-ui-engineering` ⭐ *(Skill Reina de Implementación)*
@@ -71,7 +71,7 @@ graph TD
 * **Componentes clave a construir:**
   * `<BentoCard />`: Tarjeta táctil con micro-animaciones al presionar.
   * `<VoiceOrb />`: Esfera pulsante de Web Audio API conectada a Whisper.
-  * `<TeleprompterMirror />`: Vista de cámara frontal con texto flotante en scroll suave.
+  * `<ScriptDetailModal />`: Vista limpia del guion con botón de 1-tap para copiar al portapapeles.
   * `<StoryCarousel />`: Navegación horizontal tipo Instagram Stories para pasar de acto en acto.
 
 ### 3. `api-and-interface-design`
@@ -112,7 +112,7 @@ Si no vienes del mundo de diseño, no necesitas aprender a usar Figma desde cero
      * `"AI voice assistant mobile app"`
      * `"Creator scriptwriter UI"`
      * `"Bento grid mobile app iOS"`
-     * `"Teleprompter camera UI"`
+     * `"Interactive script cards UI"`
 3. **[Curated.design](https://www.curated.design)** y **[Godly.website](https://godly.website)**:
    * Inspiración sobre tipografía de lujo (serif contemporánea + sans-serif geométrica) y contrastes de color editoriales.
 
@@ -132,7 +132,7 @@ Paso 1: Setup PWA & Tokens de Color (Next.js 15 + Tailwind CSS v4 + Outfit Font)
 Paso 2: Componente Bento Grid para los 4 Actos del Guion
 Paso 3: Esfera de Audio Interactiva (Voice Orb) conectada al endpoint de Whisper
 Paso 4: Conexión Supabase Realtime (Sincronización Telegram <-> Web en vivo)
-Paso 5: Modo Teleprompter Espejo con Cámara Frontal
+Paso 5: Exportación y Copiado Rápido de Guion (1-Tap Copy & Share)
 Paso 6: Auditoría de Rendimiento Móvil y PWA install prompt
 ```
 
