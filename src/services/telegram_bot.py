@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import time
 import re
 from typing import Optional, List
 from telegram import Update, constants
@@ -294,28 +295,34 @@ class RickTelegramBot:
             text_length=len(text)
         )
 
-        # 1. Resolver usuario multitenant
-        user_id, identity, is_new = self.db.get_or_create_telegram_identity(
-            telegram_id=str(user.id),
-            username=user.username,
-            first_name=user.first_name or "Creador"
-        )
+        try:
+            # 1. Resolver usuario multitenant
+            user_id, identity, is_new = self.db.get_or_create_telegram_identity(
+                telegram_id=str(user.id),
+                username=user.username,
+                first_name=user.first_name or "Creador"
+            )
 
-        # 2. Hilo de conversación
-        thread = self.db.get_or_create_telegram_thread(user_id)
-        thread_id = thread.get("id")
-        self.db.append_thread_message(thread_id, "user", text)
+            # 2. Hilo de conversación
+            thread = self.db.get_or_create_telegram_thread(user_id)
+            thread_id = thread.get("id")
+            self.db.append_thread_message(thread_id, "user", text)
 
-        # 3. Procesar en el orquestador principal de RICK
-        await self._dispatch_orchestrator_turn(
-            update=update,
-            context=context,
-            user_id=user_id,
-            thread_id=thread_id,
-            user_message=text,
-            typing_interval=3.5,
-            correlation_id=corr_id
-        )
+            # 3. Procesar en el orquestador principal de RICK
+            await self._dispatch_orchestrator_turn(
+                update=update,
+                context=context,
+                user_id=user_id,
+                thread_id=thread_id,
+                user_message=text,
+                typing_interval=3.5,
+                correlation_id=corr_id
+            )
+        except Exception as e:
+            logger.exception(f"Error procesando mensaje de texto de {user.id}: {e}")
+            await update.message.reply_text(
+                "Disculpa, hubo una interferencia técnica en la mesa. ¿Podrías reenviar tu mensaje?"
+            )
 
     async def voice_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
@@ -340,96 +347,105 @@ class RickTelegramBot:
         )
         await context.bot.send_chat_action(chat_id=chat.id, action=constants.ChatAction.RECORD_VOICE)
 
-        # 1. Descargar audio
-        voice_file = await context.bot.get_file(voice.file_id)
-        audio_bytearray = await voice_file.download_as_bytearray()
-        audio_bytes = bytes(audio_bytearray)
+        try:
+            # 1. Descargar audio
+            voice_file = await context.bot.get_file(voice.file_id)
+            audio_bytearray = await voice_file.download_as_bytearray()
+            audio_bytes = bytes(audio_bytearray)
 
-        # 2. Transcribir nota de voz (Whisper primario, Gemini fallback)
-        transcribed_text = ""
-        transcription_start = time.time()
-        if self.oa_client:
-            try:
-                import io
-                audio_file = io.BytesIO(audio_bytes)
-                audio_file.name = "voice.ogg"
-                transcript = self.oa_client.audio.transcriptions.create(
-                    model="whisper-1",
-                    file=audio_file,
-                    language="es"
-                )
-                transcribed_text = (transcript.text or "").strip()
-                trans_dur = int((time.time() - transcription_start) * 1000)
-                log_event(
-                    logger,
-                    logging.INFO,
-                    event="telegram_voice_transcribed",
-                    message=f"📝 Transcripción Whisper ({trans_dur}ms): '{transcribed_text[:60]}...'",
-                    engine="whisper-1",
-                    duration_ms=trans_dur,
-                    char_count=len(transcribed_text)
-                )
-            except Exception as whisper_err:
-                log_event(
-                    logger,
-                    logging.WARNING,
-                    event="telegram_whisper_fallback",
-                    message=f"Aviso Whisper ({whisper_err}). Probando Gemini...",
-                    error_message=str(whisper_err)
-                )
+            # 2. Transcribir nota de voz (Whisper primario, Gemini fallback)
+            transcribed_text = ""
+            transcription_start = time.time()
+            if self.oa_client:
+                try:
+                    import io
+                    audio_file = io.BytesIO(audio_bytes)
+                    audio_file.name = "voice.ogg"
+                    transcript = self.oa_client.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=audio_file,
+                        language="es"
+                    )
+                    transcribed_text = (transcript.text or "").strip()
+                    trans_dur = int((time.time() - transcription_start) * 1000)
+                    log_event(
+                        logger,
+                        logging.INFO,
+                        event="telegram_voice_transcribed",
+                        message=f"📝 Transcripción Whisper ({trans_dur}ms): '{transcribed_text[:60]}...'",
+                        engine="whisper-1",
+                        duration_ms=trans_dur,
+                        char_count=len(transcribed_text)
+                    )
+                except Exception as whisper_err:
+                    log_event(
+                        logger,
+                        logging.WARNING,
+                        event="telegram_whisper_fallback",
+                        message=f"Aviso Whisper ({whisper_err}). Probando Gemini...",
+                        error_message=str(whisper_err)
+                    )
 
-        if not transcribed_text and config.GEMINI_API_KEY:
-            try:
-                resp = self.gemini_client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=[
-                        types.Part.from_bytes(data=audio_bytes, mime_type="audio/ogg"),
-                        "Transcribe con total exactitud esta nota de voz en español. Devuelve ÚNICAMENTE el texto transcrito."
-                    ]
-                )
-                transcribed_text = resp.text.strip()
-                trans_dur = int((time.time() - transcription_start) * 1000)
-                log_event(
-                    logger,
-                    logging.INFO,
-                    event="telegram_voice_transcribed",
-                    message=f"📝 Transcripción Gemini ({trans_dur}ms): '{transcribed_text[:60]}...'",
-                    engine="gemini-2.5-flash",
-                    duration_ms=trans_dur,
-                    char_count=len(transcribed_text)
-                )
-            except Exception as gem_err:
-                log_event(
-                    logger,
-                    logging.ERROR,
-                    event="telegram_voice_transcription_failed",
-                    message=f"Error transcribiendo audio con Gemini: {gem_err}",
-                    error_message=str(gem_err)
-                )
+            if not transcribed_text and config.GEMINI_API_KEY:
+                try:
+                    mime = getattr(voice, "mime_type", None) or "audio/ogg"
+                    resp = self.gemini_client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=[
+                            types.Part.from_bytes(data=audio_bytes, mime_type=mime),
+                            "Transcribe con total exactitud esta nota de voz en español. Devuelve ÚNICAMENTE el texto transcrito."
+                        ]
+                    )
+                    transcribed_text = (resp.text or "").strip()
+                    trans_dur = int((time.time() - transcription_start) * 1000)
+                    log_event(
+                        logger,
+                        logging.INFO,
+                        event="telegram_voice_transcribed",
+                        message=f"📝 Transcripción Gemini ({trans_dur}ms): '{transcribed_text[:60]}...'",
+                        engine="gemini-2.5-flash",
+                        duration_ms=trans_dur,
+                        char_count=len(transcribed_text)
+                    )
+                except Exception as gem_err:
+                    log_event(
+                        logger,
+                        logging.ERROR,
+                        event="telegram_voice_transcription_failed",
+                        message=f"Error transcribiendo audio con Gemini: {gem_err}",
+                        error_message=str(gem_err)
+                    )
 
-        if not transcribed_text:
-            await update.message.reply_text("No pude procesar la nota de voz. Por favor escribe tu mensaje o intenta de nuevo.")
-            return
+            if not transcribed_text:
+                await update.message.reply_text(
+                    "🎙️ No alcancé a captar audio en esa nota de voz (parece que no tenía sonido o llegó en silencio). ¿Podrías volver a grabarla o escribírmela?"
+                )
+                return
 
-        # 3. Resolver identidad y procesar con RICK
-        user_id, identity, is_new = self.db.get_or_create_telegram_identity(
-            telegram_id=str(user.id),
-            username=user.username,
-            first_name=user.first_name or "Creador"
-        )
-        thread = self.db.get_or_create_telegram_thread(user_id)
-        thread_id = thread.get("id")
-        self.db.append_thread_message(thread_id, "user", f"[Nota de voz]: {transcribed_text}")
+            # 3. Resolver identidad y procesar con RICK
+            user_id, identity, is_new = self.db.get_or_create_telegram_identity(
+                telegram_id=str(user.id),
+                username=user.username,
+                first_name=user.first_name or "Creador"
+            )
+            thread = self.db.get_or_create_telegram_thread(user_id)
+            thread_id = thread.get("id")
+            self.db.append_thread_message(thread_id, "user", f"[Nota de voz]: {transcribed_text}")
 
-        await self._dispatch_orchestrator_turn(
-            update=update,
-            context=context,
-            user_id=user_id,
-            thread_id=thread_id,
-            user_message=transcribed_text,
-            typing_interval=3.5,
-            correlation_id=corr_id
-        )
+            await self._dispatch_orchestrator_turn(
+                update=update,
+                context=context,
+                user_id=user_id,
+                thread_id=thread_id,
+                user_message=transcribed_text,
+                typing_interval=3.5,
+                correlation_id=corr_id
+            )
+        except Exception as e:
+            logger.exception(f"Error procesando nota de voz de {user.id}: {e}")
+            await update.message.reply_text(
+                "🎙️ Tuve una interferencia técnica al procesar tu nota de voz. Por favor intenta enviarla de nuevo o déjamelo por escrito."
+            )
 
     def run_polling(self):
         if not self.token or "PLACEHOLDER" in self.token:
@@ -442,7 +458,14 @@ class RickTelegramBot:
         from telegram.request import HTTPXRequest
 
         async def on_telegram_error(update: object, context: ContextTypes.DEFAULT_TYPE):
-            logger.error(f"⚠️ [Telegram Error] {context.error}")
+            logger.error(f"⚠️ [Telegram Error] {context.error}", exc_info=context.error)
+            if isinstance(update, Update) and update.effective_message:
+                try:
+                    await update.effective_message.reply_text(
+                        "Disculpa, ocurrió un error inesperado al procesar tu solicitud. Por favor intenta de nuevo en unos momentos."
+                    )
+                except Exception:
+                    pass
 
         request = HTTPXRequest(connect_timeout=30.0, read_timeout=30.0, write_timeout=30.0)
         self.app = Application.builder().token(self.token).request(request).build()
