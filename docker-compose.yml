@@ -9,6 +9,7 @@ services:
       - .env
     environment:
       - TZ=America/Bogota
+      - PYTHONUNBUFFERED=1
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
   rick-telegram:
@@ -19,6 +20,8 @@ services:
       - .env
     environment:
       - TZ=America/Bogota
+      - PYTHONUNBUFFERED=1
     command: ["python", "-m", "src.services.telegram_bot"]
     depends_on:
       - rick-api
+
