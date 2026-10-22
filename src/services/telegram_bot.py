@@ -18,7 +18,6 @@ from src.core.config import config
 from src.core.observability import (
     generate_correlation_id,
     set_request_context,
-    get_correlation_id,
     log_event,
 )
 from src.db.supabase import DatabaseService
