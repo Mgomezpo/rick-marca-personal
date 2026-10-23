@@ -95,47 +95,17 @@ def process_whatsapp_background(payload: Dict[str, Any]) -> None:
                     if not text_body:
                         continue
 
-                    # Load or initialize state
-                    profile = repo.get_creator_profile(user_id)
-                    state = create_initial_state(user_id=user_id, handle=sender_name)
-                    if profile:
-                        state["creator_profile"] = profile
-                        state["story_bank"] = profile.story_bank
-                    else:
-                        state["story_bank"] = repo.get_story_bank(user_id)
-
-                    # Load previous learnings from Supabase
-                    state["learnings"] = repo.get_learnings(user_id)
-
-                    # Persist user message and load full conversation history
-                    user_msg = ConversationMessage(
-                        role="user",
-                        content=text_body,
+                    from src.services.session_runner import process_user_turn
+                    final_response = process_user_turn(
+                        user_id=user_id,
+                        handle=sender_name,
+                        text=text_body,
+                        channel="whatsapp",
                         timestamp=str(msg.get("timestamp", "")),
+                        repo_override=repo,
+                        engine_override=engine,
                     )
-                    repo.save_message(user_id, user_msg)
-                    state["messages"] = repo.get_conversation(user_id)
-
-                    # Run graph
-                    final_state = engine.run(state)
-
-                    # Save new learnings generated during the session
-                    for learning in final_state.get("learnings", []):
-                        repo.save_learning(learning)
-
-                    # Save script piece if generated
-                    draft = final_state.get("script_draft")
-                    if draft:
-                        repo.save_piece(user_id, draft)
-
-                    # Persist assistant reply and dispatch outbound message to WhatsApp
-                    final_response = final_state.get("final_response")
                     if final_response:
-                        assistant_msg = ConversationMessage(
-                            role="assistant",
-                            content=final_response,
-                        )
-                        repo.save_message(user_id, assistant_msg)
                         send_whatsapp_message(to_phone=sender_phone, text=final_response)
 
                     logger.info(f"Processed message for {user_id}: response ready and dispatched.")

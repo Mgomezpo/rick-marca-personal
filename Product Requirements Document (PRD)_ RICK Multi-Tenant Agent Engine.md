@@ -1,5 +1,13 @@
 # **Product Requirements Document (PRD): RICK Multi-Tenant Agent Engine (Hermes-Inspired)**
 
+> [!NOTE]
+> **Estado de Implementación:** Completamente implementado y en producción (v1.0.1).  
+> Los requerimientos descritos en este PRD fueron materializados y ampliados en el motor de grafos [`src/graph/engine.py`](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/src/graph/engine.py).  
+> Para consultar la especificación técnica vigente, diagramas de flujo y registros de decisiones, revise:
+> - [**ARQUITECTURA_RICK_MULTITENANT.md**](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/ARQUITECTURA_RICK_MULTITENANT.md)
+> - [**README.md**](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/README.md)
+> - [**docs/decisions/**](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/README.md)
+
 ## **1\. Executive Summary & Architecture Blueprint**
 
 This Product Requirements Document (PRD) specifies the transformation of the local mono-user RICK system into a production-grade, **Multi-Tenant Stateless Agent Engine** deployed on FastAPI (Railway/Cloud Run) with Supabase PostgreSQL, serving users via Meta WhatsApp Cloud API and Web endpoints. Drawing architecture patterns directly from [Nous Research Hermes Agent](https://github.com/nousresearch/hermes-agent), RICK combines a dual-tier memory system, ReAct tool execution loops, dynamic context window compression, and strict voice/tone decoupling.

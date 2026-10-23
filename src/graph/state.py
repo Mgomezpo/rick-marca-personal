@@ -167,7 +167,7 @@ class GraphState(TypedDict, total=False):
     pilar: Optional[str]
     plan_id: Optional[str]
     # Episodic receipts
-    story_bank: Optional[List[StoryReceipt]]
+    story_bank: List[StoryReceipt]
 
 
 def create_initial_state(user_id: str, handle: str = "") -> GraphState:

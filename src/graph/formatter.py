@@ -52,13 +52,20 @@ def format_script_whatsapp(
         lines.append(f"(Cámara: {draft.cierre.camara})")
 
     if evaluation:
-        piezas = evaluation.piezas_respaldo or 5
+        piezas = evaluation.piezas_respaldo
         score = evaluation.score
         lines.append("")
-        lines.append(
-            f"💡 Lo calibré contra {piezas} videos de tus referentes que rompieron su mediana "
-            f"con este mismo patrón. Le doy un {score:.1f}/10 de probabilidad porque la estructura "
-            f"está probadísima y las palabras son 100% tu historia real."
-        )
+        if piezas > 0:
+            lines.append(
+                f"💡 Lo calibré contra {piezas} videos de tus referentes que rompieron su mediana "
+                f"con este mismo patrón. Le doy un {score:.1f}/10 de probabilidad porque la estructura "
+                f"está probadísima y las palabras son 100% tu historia real."
+            )
+        else:
+            # Never fabricate empirical backing: be explicit when there is none yet.
+            lines.append(
+                f"💡 Todavía no tengo videos de tus referentes que respalden este patrón, así que "
+                f"le doy un {score:.1f}/10 de probabilidad apoyado solo en la estructura y tu historia real."
+            )
 
     return "\n".join(lines)

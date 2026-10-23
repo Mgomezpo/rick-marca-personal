@@ -1,35 +1,29 @@
-# RICK — KICKOFF MVP (Documento de Arranque Limpio)
+# [HISTÓRICO / ARCHIVADO] RICK — KICKOFF MVP
 
-> **Propósito:** Contexto consolidado para arrancar la nueva sesión limpia en Antigravity sin arrastrar peso ni ruido de conversaciones anteriores.
+> [!NOTE]
+> **Estado del Documento:** Histórico / Archivado.  
+> Este documento representa la nota inicial de arranque exploratorio (clon de UI de Stanley, interfaz web en Next.js, etc.).  
+> La implementación oficial de RICK ha evolucionado y se consolidó como un **Motor Multitenant Autónomo para WhatsApp** basado en State Graphs de LangGraph.  
+> Para la documentación arquitectónica vigente y el estado actual de producción, consulte:
+> - [**ARQUITECTURA_RICK_MULTITENANT.md**](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/ARQUITECTURA_RICK_MULTITENANT.md)
+> - [**README.md**](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/README.md)
+> - [**docs/decisions/**](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/README.md)
 
 ---
 
-## 1. El Objetivo del MVP
+## 1. El Objetivo Inicial del Kickoff
 
 Construir la experiencia validada de **Stanley (`https://x.getstanley.ai/ideate`)** para RICK:
-1. **Frontend Web:** Clon e ingeniería inversa de la pantalla de Stanley (`/ideate`) usando **REA (`C:\Users\mgome\OneDrive\Documents\IrealREA\rea`)** para extraer su interfaz, componentes y flujo, adaptándolo con el diseño editorial de RICK (Fraunces + Outfit + Paper/Ink/Crimson) y conectándolo a Supabase.
-2. **Canales Móviles Nativos (Cero Twilio):**
-   - Telegram Bot (`src/services/telegram_bot.py`).
+1. **Frontend Web:** Exploración inicial de clon e ingeniería inversa de la pantalla de Stanley (`/ideate`) usando **REA (`C:\Users\mgome\OneDrive\Documents\IrealREA\rea`)** para extraer su interfaz, componentes y flujo, adaptándolo con el diseño editorial de RICK (Fraunces + Outfit + Paper/Ink/Crimson) y conectándolo a Supabase.
+2. **Canales Móviles Nativos:**
+   - Telegram Bot exploratorio (`src/services/telegram_bot.py`).
    - WhatsApp oficial mediante **Meta Cloud API** (`src/services/whatsapp.py`).
-3. **Motor RICK (Python FastAPI):**
-   - Subagentes modulares en `src/engine/subagents/` (`hook_writer.py`, `guionista.py`, `anti_slop_editor.py`).
+3. **Motor RICK:**
+   - Subagentes modulares en `src/engine/subagents/`.
    - Guarda y actualiza las piezas directamente en Supabase (`pieces`, `platform_connections`).
-4. **Conexiones & Autoposteo:** Meta (Instagram), TikTok y X.
 
 ---
 
-## 2. Hoja de Ruta
+## 2. Estado de Evolución
 
-- **Sprint 1: Extracción con REA y Clon de Stanley (`/ideate`):**
-  - Conectar REA vía Chrome con remote debugging port `9222` para capturar la estructura de componentes, estilos y API de `https://x.getstanley.ai/ideate`.
-  - Recrear la pantalla en Next.js conectada a la tabla `pieces` de Supabase.
-- **Sprint 2: Pipeline de Mensajería (Telegram + WhatsApp Meta Cloud API):**
-  - Conectar la entrada de voz/texto al orquestador y los subagentes, reflejando las ideas en la interfaz clonada.
-- **Sprint 3: Conexión de Redes y Publicación Automática.**
-
----
-
-## Mensaje para arrancar la nueva sesión:
-
-Abre un nuevo chat (`+`) y escribe:
-> *"Arrancamos el Sprint 1 según @KICKOFF_MVP.md para usar REA e inspeccionar la pantalla de Stanley /ideate."*
+El alcance de este kickoff inicial fue completado y reemplazado por la implementación del motor en `src/graph/engine.py`, integrando el canal nativo de WhatsApp, el loop de calidad anti-plagio/anti-slop y los 4 loops proactivos con Gobernador.

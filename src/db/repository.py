@@ -1,7 +1,9 @@
-"""Multi-tenant Supabase repository with strict user_id isolation."""
 import os
 import uuid
+import logging
 from typing import Optional, List, Dict, Any
+
+logger = logging.getLogger("rick.db.repository")
 from src.graph.state import (
     CreatorProfile,
     LearningItem,
@@ -58,15 +60,24 @@ class SupabaseRepository:
 
     def __init__(self, supabase_client: Optional[Any] = None):
         self.supabase_url = os.getenv("SUPABASE_URL")
-        self.supabase_key = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("SUPABASE_KEY")
+        self.supabase_key = (
+            os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+            or os.getenv("SUPABASE_KEY")
+            or os.getenv("SUPABASE_SERVICE_KEY")  # legacy name, kept for backwards compatibility
+        )
         self.client = supabase_client
 
         if self.client is None and self.supabase_url and self.supabase_key:
             try:
                 from supabase import create_client
                 self.client = create_client(self.supabase_url, self.supabase_key)
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Supabase client init failed, falling back to in-memory store: {e}")
                 self.client = None
+        elif self.client is None and (self.supabase_url or self.supabase_key):
+            logger.warning(
+                "Incomplete Supabase config (need SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY); using in-memory store."
+            )
 
         # Thread-safe in-memory store partitioned strictly by user_id
         self._profiles: Dict[str, CreatorProfile] = {}

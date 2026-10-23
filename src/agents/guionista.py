@@ -10,6 +10,16 @@ from src.graph.state import (
     update_state,
 )
 
+VISUAL_HOOK_MAX_WORDS = 9
+
+
+def _clip_words(text: str, max_words: int = VISUAL_HOOK_MAX_WORDS) -> str:
+    """Clip on-screen text to max_words so the visual hook stays readable in <1s."""
+    words = text.split()
+    if len(words) <= max_words:
+        return text
+    return " ".join(words[:max_words]).rstrip(".,:;") + "..."
+
 
 def generate_script_draft(
     story: str,
@@ -49,10 +59,13 @@ def generate_script_draft(
         first_sentence = clean_story.split(".")[0].strip()
         hook_text = f'"{first_sentence}."'
 
-    # Formulate Desarrollo
+    # Formulate Desarrollo (the friction step is spoken verbatim as the belief break)
+    friction_step = "delegar lo que no dominas es quemar capital sin aprender."
+    story_body = clean_story.rstrip(".") if clean_story else "este quiebre clave"
     desarrollo_text = (
-        f"El problema real no fue la herramienta, fue querer delegar lo que yo todavía no dominaba. "
-        f"Si tú no sabes explicar tu valor en una servilleta, nadie lo va a vender por ti: {clean_story}."
+        f"El problema real no fue la herramienta, fue querer delegar lo que yo todavía no dominaba: "
+        f"{friction_step} "
+        f"Si tú no sabes explicar tu valor en una servilleta, nadie lo va a vender por ti: {story_body}."
     )
     desarrollo_intencion = "Construir autoridad con experiencia práctica y desmontar la causa raíz"
     desarrollo_camara = "Plano medio a cámara, mirada fija, tono natural y directo"
@@ -87,9 +100,10 @@ def generate_script_draft(
         visual_hook = "la fantasía de automatizarlo todo."
     else:
         visual_hook = "lo que nadie te dice de este juego."
+    visual_hook = _clip_words(visual_hook)
 
+    # Spoken hook is always synchronized with the canonical hook block
     spoken_hook = hook_text.strip(' "')
-    friction_step = "delegar lo que no dominas es quemar capital sin aprender."
 
     return ScriptDraft(
         titulo=titulo,

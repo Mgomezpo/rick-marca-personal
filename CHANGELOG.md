@@ -4,6 +4,19 @@ All notable changes to the RICK Multitenant Agent Engine project will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-19
+
+### Added
+- **Multidimensional Content Architecture (`core-state` & `db-repository`):** Free combinatory matrix allowing Standalone pieces, Brand Pillars, Episodic Sagas, and Plans without forced hierarchies or mandatory classifications.
+- **Episodic Series Metadata (`SeriesMetadata`):** Pydantic V2 model in `src/graph/state.py` for saga sequencing (`series_id`, `series_title`, `episode_index`, `total_episodes`, `previous_piece_id`, `next_piece_id`).
+- **Narrative Continuity Engine (`script-writer`):** Dynamic continuity hooks in `src/agents/guionista.py` for episodes > 1 linking to previous releases, and dramatic cliffhangers in closing CTA for non-final episodes.
+- **Saga Mayeutics in WhatsApp (`rick-strategist`):** Multi-point and dense story detection in `src/agents/rick.py` with peer suggestion of single 45s piece vs 2-part saga (*"¿Hacemos una sola pieza al grano o te parece si armamos una saga de 2 partes?"*), respecting creator autonomy without imposing.
+- **Tenant-Isolated Series & Pillar Queries (`db-repository`):** Implemented `get_series_pieces` and `get_pillar_pieces` in `SupabaseRepository` with strict `user_id` scoping and sorting by `episode_index`.
+- **Architectural Documentation (`documentation-and-adrs`):** Registered ADR-006 (Wide Radar Sampling & Anti-Overlap), ADR-007 (Multidimensional Content Architecture), and Section 12 in `ARQUITECTURA_RICK_MULTITENANT.md`.
+
+### Changed
+- **Zero Breaking Changes / No Destructive DDL:** Preserved 100% backward compatibility for all 132 historical pieces and 33 active tenants in Supabase, mapping series to native JSONB `idea_fields` and existing columns `strategy_tag` and `plan_id`.
+
 ## [1.0.1] - 2026-10-19
 
 ### Added

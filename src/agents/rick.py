@@ -112,21 +112,25 @@ def rick_strategist_node(state: GraphState) -> GraphState:
     intent = classify_intent(last_user_message, state) if last_user_message else state.get("current_intent", "chat")
 
     # Multi-tenant Cold Onboarding check (Tenant #2 with empty receipts bank)
-    handle_match = re.search(r"@([A-Za-z0-9_.-]+)", last_user_message)
+    handle_match = re.search(r"(?:^|\s)@([A-Za-z0-9_.]+)", last_user_message)
+    onboarding_updates = {}
     if not story_bank and handle_match:
-        extracted_handle = handle_match.group(1)
+        extracted_handle = handle_match.group(1).rstrip(".")
         new_receipts = receipt_extractor_service.extract_receipts_from_content(
             creator_handle=extracted_handle,
             raw_text_or_posts=last_user_message,
         )
         story_bank = new_receipts
+        # Tenant-isolated copy: never mutate the incoming profile/state objects in place
         if profile:
-            profile.instagram_handle = extracted_handle
-            profile.story_bank = new_receipts
-        state["story_bank"] = new_receipts
+            profile = profile.model_copy(
+                update={"instagram_handle": extracted_handle, "story_bank": list(new_receipts)}
+            )
+            onboarding_updates["creator_profile"] = profile
+        onboarding_updates["story_bank"] = list(new_receipts)
         intent = "cold_onboarding"
 
-    state_updates = {"current_intent": intent}
+    state_updates = {"current_intent": intent, **onboarding_updates}
 
     # Extract accumulated story elements
     story = extract_story_elements(state)
