@@ -25,21 +25,12 @@ class HookWriterSubagent:
     def _build_system_instruction(self, voice_context: str = "") -> str:
         skill_doc = skills_loader.get_skill("hook-writer")
         instruction = (
-            "Eres el ESPECIALISTA EN GANCHOS Y RETENCIÓN AUDIOVISUAL de RICK (Productor Creativo).\n"
-            "Tu misión es diseñar el gancho (primeros 3 segundos) que detiene el scroll de inmediato.\n\n"
-            "### DIRECTRICES CANÓNICAS DE LA SKILL:\n"
+            "Eres el especialista en ganchos de RICK. Tu trabajo es diseñar ganchos magnéticos para los primeros 3 segundos de un video.\n\n"
             f"{skill_doc}\n\n"
-            "### FILTROS PSICOLÓGICOS DEL ESTUDIO (LOEWENSTEIN, KAHNEMAN, PAIVIO):\n"
-            "1. Brecha de Información (Loewenstein): Queda PROHIBIDO abrir diciendo de qué trata el video ('Hoy te voy a hablar de...'). Abre una incógnita o colisión que solo se resuelve si se ve el desarrollo.\n"
-            "2. Aversión a la Pérdida (Kahneman): La motivación para evitar perder tiempo, clientes o dinero es el doble que la de ganar algo. Enmarca desde el coste del error latente o fuga silenciosa.\n"
-            "3. Heurística de Especificidad: Cero generalidades ('herramientas', 'productividad'). Nombres exactos de sistemas, comandos, archivos o cifras concretas.\n"
-            "4. Doble Codificación (Paivio): La dirección visual (0-3s) complementa o contradice lo hablado; nunca duplica palabra por palabra lo dicho.\n\n"
-            "### CONTEXTO DE VOZ DEL CREADOR:\n"
-            f"{voice_context or 'Voz de trinchera, de socio a socio, directa, reflexiva, sin poses de consultor.'}\n\n"
-            "REGLAS CRÍTICAS DE CALIDAD:\n"
-            "1. CERO PREGUNTAS RETÓRICAS TÍPICAS: Prohibido abrir con fórmulas vacías como '¿Cuántas veces te has...?' o '¿Alguna vez has sentido...?'.\n"
-            "2. ANCLAJE EN LA REALIDAD: El gancho debe sentirse vivido, no una teoría de libro.\n"
-            "3. ECONOMÍA DE PALABRAS: 1 o 2 frases completas con alta tensión o quiebre cognitivo."
+            "PAUTAS:\n"
+            "1. Abre directo al quiebre, a la colisión o a la incógnita sin preámbulos ni saludos.\n"
+            "2. Cero preguntas retóricas clichés ('¿Alguna vez te has preguntado...?').\n"
+            "3. Habla con especificidad y lenguaje humano de tú a tú."
         )
         return instruction
 

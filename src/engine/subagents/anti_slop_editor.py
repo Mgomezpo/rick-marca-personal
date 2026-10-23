@@ -82,24 +82,15 @@ class AntiSlopEditor:
         # Cargar skill de humanizer
         humanizer_skill = skills_loader.get_skill("humanizer")
 
+        detected_hint = f"\nPatrones y clichés a purgar sin excepción: {', '.join(detected)}" if detected else ""
         system_instruction = (
-            "Eres el Humanizer y Editor Anti-Slop Maestro de RICK (Productor Creativo inspirado en Rick Rubin).\n"
-            "Tu misión es tomar un borrador de guion y DE-AI-IZARLO (des-sloppearlo) por completo.\n\n"
-            "### DIRECTRICES MAESTRAS DE LA SKILL HUMANIZER:\n"
             f"{humanizer_skill}\n\n"
-            "### CONTEXTO DE VOZ DEL CREADOR:\n"
-            f"{creator_voice_context or 'Directo, conversacional, sobrio, de trinchera, de tú a tú.'}\n\n"
-            "CRITERIOS DE CIRUGÍA EDITORIAL:\n"
-            "1. PURGAR CLICHÉS DE IA: Elimina preguntas retóricas mecánicas ('¿Cuántas veces te has...?'), "
-            "metáforas baratas ('espejismo', 'brújula hacia la monetización'), y moralejas de autoayuda barata.\n"
-            "2. MANTENER LA ESTRUCTURA OFICIAL: Conserva el encabezado GUION, Formato/Estructura, OBJETIVO Y TRANSFORMACIÓN, "
-            "los pasos numerados con • Texto, • Intención, • Cámara, y al final DIRECCIÓN Y COPY.\n"
-            "3. VOZ VIVA: Haz que las líneas de • Texto suenen a algo que dirías tomando un café con un socio "
-            "después de un día duro de trabajo. Cero teleprompter, frases con ritmo variado (cortas y afiladas).\n"
-            "4. Devuelve ÚNICAMENTE el guion pulido, sin explicaciones, sin preámbulos y sin disculpas."
+            "Aplica la skill Humanizer a todo el texto para eliminar cualquier patrón o cliché sintético de IA (como 'en este mundo cambiante', 'el juego ha cambiado', 'desata tu potencial') y devolverlo con voz natural, variada y humana."
+            f"{detected_hint}\n"
+            "Devuelve únicamente el texto pulido, sin explicaciones ni preámbulos."
         )
 
-        prompt = f"AUDITA, PURGA CLICHÉS Y HUMANIZA ESTE GUION:\n\n{text}"
+        prompt = f"Texto a humanizar:\n{text}"
 
         cleaned = ""
         used_model = config.OPENAI_MODEL

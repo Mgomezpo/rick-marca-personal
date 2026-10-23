@@ -66,29 +66,15 @@ class GuionistaSubagent:
         # FASE 2: Redacción del Guion Estructurado con la Skill Guionista y Cerebro
         # ---------------------------------------------------------------------
         guionista_skill = skills_loader.get_skill("guionista")
-        decision_tree_doc = skills_loader.get_brain_doc("03_studio/frameworks/decision_tree.md")
-        reduction_doc = skills_loader.get_brain_doc("01_philosophy/principles/reduction.md")
 
         system_instruction = (
-            "Eres el GUIONISTA MAESTRO de RICK (Productor Creativo inspirado en Rick Rubin).\n"
-            "Tu misión es transformar anécdotas de trinchera, dolores o quiebres en guiones de alta tensión narrativa "
-            "para Reels, TikTok o YouTube Shorts (45-60s).\n\n"
-            "### DIRECTRICES CANÓNICAS DE LA SKILL GUIONISTA:\n"
+            "Eres el Guionista de RICK. Tu trabajo es transformar una idea, anécdota o concepto en un guion "
+            "claro, dinámico y grabable para Reels o Shorts (45-60s).\n\n"
             f"{guionista_skill}\n\n"
-            "### ÁRBOL DE DECISIÓN HEURÍSTICO DEL ESTUDIO (PSYCHOLOGY & FRAMEWORKS):\n"
-            f"{decision_tree_doc}\n\n"
-            "### PRINCIPIO DE REDUCCIÓN DE RUBIN (PODA Y CADENCIA):\n"
-            f"{reduction_doc}\n\n"
-            "### REGLAS DE ORO:\n"
-            "1. CERO EMOJIS en títulos, viñetas o cuerpo.\n"
-            "2. DE SOCIO A SOCIO: Habla de 'yo' a 'tú'. Cero cátedra corporativa o lecciones abstractas.\n"
-            "3. LENGUAJE HABLADO Y VIVO: Frases cortas, directas, fáciles de decir frente a cámara sin teleprompter.\n"
-            "4. LOS 4 FILTROS PSICOLÓGICOS OBLIGATORIOS:\n"
-            "   - Brecha de Información (Loewenstein): CERO spoilers en el hook de 0 a 3s.\n"
-            "   - Aversión a la Pérdida (Kahneman): Enmarca el dolor desde el coste de no actuar o el error latente.\n"
-            "   - Heurística de Especificidad: Usa nombres concretos de sistemas, comandos, archivos o métricas reales.\n"
-            "   - Doble Codificación (Paivio): Texto en pantalla y cámara complementan o contradicen, no duplican audio.\n"
-            "5. ANCLAJE OBLIGATORIO: Integra el gancho generado en la Fase 1 en el paso '1. HOOK'."
+            "PAUTAS DE REDACCIÓN:\n"
+            "1. De socio a socio: habla de 'yo' a 'tú'. Lenguaje hablado, natural y con ritmo variado.\n"
+            "2. Sin relleno ni frases corporativas vacías.\n"
+            "3. La estructura es una guía de dirección para grabar con tensión y claridad, no una ficha técnica abstracta."
         )
 
         req_fw = (framework or "auto").strip().lower()
@@ -186,6 +172,12 @@ class GuionistaSubagent:
             user_id=user_id,
             creator_voice_context=voice_context
         )
+
+        # Estandarización defensiva de encabezados canónicos
+        clean_script = re.sub(r'(?i)objetivo y transformación', 'OBJETIVO Y TRANSFORMACIÓN', clean_script)
+        clean_script = re.sub(r'(?i)1\.\s*(inicio|gancho)', '1. HOOK', clean_script)
+        clean_script = re.sub(r'(?i)dirección y copy', 'DIRECCIÓN Y COPY', clean_script)
+        clean_script = re.sub(r'(?i)dirección y texto', 'DIRECCIÓN Y COPY', clean_script)
 
         # Extraer metadatos con regexes robustas
         title_m = re.search(r'GUION:\s*([^\n\r]+)', clean_script, re.IGNORECASE)
