@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   3. Worldview & Contraintuitive Stances extraction (Question 2).
   4. Structured profiling (Audience, Goal, Niche, Stances, Tone), peer validation, and delivery of 3 video concepts backed by real scraped Instagram URLs.
 - **Strict Anti-Hallucination & Zero-Fake-Link Policy:** Proscribed placeholders such as `[link]` and fictional dashboard promises; all viral patterns and strategic value are delivered natively within the WhatsApp chat.
-- **Architectural Documentation (`documentation-and-adrs`):** Registered ADR-008 (`docs/decisions/ADR-008-apify-niche-discovery-and-conversational-onboarding.md`) and Section 13 in `ARQUITECTURA_RICK_MULTITENANT.md`.
+- **DigitalOcean Droplet Deployment Architecture & Runbook (`documentation-and-adrs`):** Standardized production deployment runbook in `DEPLOYMENT.md`, registered ADR-009 (`docs/decisions/ADR-009-digitalocean-droplet-docker-deployment-and-telegram-bot.md`), and updated health check probe (`/health`) with explicit version reporting.
+- **Architectural Documentation (`documentation-and-adrs`):** Registered ADR-008 (`docs/decisions/ADR-008-apify-niche-discovery-and-conversational-onboarding.md`), ADR-009, and Section 13 in `ARQUITECTURA_RICK_MULTITENANT.md`.
 
 ### Changed
 - **Eradication of Military Jargon & "Trinchera":** Complete elimination of `"trinchera"` and militaristic slop across prompts (`RICK_CANONICAL_SYSTEM_PROMPT`), node logic, and test assertions in favor of authentic peer-to-peer personal branding language ("experiencia real", "en la práctica").

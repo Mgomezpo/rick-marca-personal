@@ -245,6 +245,7 @@ Para comprender el razonamiento histórico, alternativas descartadas y compromis
 - [**ADR-006:** Muestreo Amplio de Radar y Exclusión Anti-Solapamiento](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-006-wide-fresh-radar-sampling.md)
 - [**ADR-007:** Arquitectura de Contenido Multidimensional: Sagas, Pilares y Planes](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-007-multidimensional-content-architecture.md)
 - [**ADR-008:** Descubrimiento Dinámico de Nicho vía Apify, Ingesta de Referencias y Onboarding en 4 Etapas](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-008-apify-niche-discovery-and-conversational-onboarding.md)
+- [**ADR-009:** Despliegue en DigitalOcean Droplet con Docker y Canales Duales (Telegram + WhatsApp)](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-009-digitalocean-droplet-docker-deployment-and-telegram-bot.md)
 
 ---
 

@@ -36,7 +36,7 @@ def health_check():
     return {
         "status": "healthy" if db_ok else "degraded",
         "service": "rick-multitenant",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "database": "connected" if db_ok else "disconnected",
         "memory": {
             "total_mb": round(memory_info.total / (1024 * 1024), 1),
