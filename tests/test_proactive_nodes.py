@@ -24,13 +24,13 @@ from src.agents.trench import (
 
 def test_analyze_brand_health_detects_deserted_pillar():
     recent_posts = [
-        {"topic": "Anécdota de fracaso", "pillar": "Historias de Trinchera"},
-        {"topic": "Cómo casi pierdo un cliente", "pillar": "Historias de Trinchera"},
-        {"topic": "Lección de vida", "pillar": "Historias de Trinchera"},
-        {"topic": "Reflexión del domingo", "pillar": "Historias de Trinchera"},
+        {"topic": "Anécdota de fracaso", "pillar": "Casos Reales y Aprendizajes"},
+        {"topic": "Cómo casi pierdo un cliente", "pillar": "Casos Reales y Aprendizajes"},
+        {"topic": "Lección de vida", "pillar": "Casos Reales y Aprendizajes"},
+        {"topic": "Reflexión del domingo", "pillar": "Casos Reales y Aprendizajes"},
     ]
     declared_pillars = [
-        {"name": "Historias de Trinchera", "target_pct": 50.0},
+        {"name": "Casos Reales y Aprendizajes", "target_pct": 50.0},
         {"name": "Arquitectura de Sistemas", "target_pct": 50.0},
     ]
 

@@ -37,7 +37,7 @@ def generate_script_draft(
         hook_intencion = "Desarmar objeción y capturar dolor con vulnerabilidad inmediata"
     elif "quiebre" in hook_type or "creencia" in hook_type:
         hook_text = f"Nos enseñaron a creer que el camino era fácil, pero {story_summary.lower()}."
-        hook_intencion = "Quiebre de creencia y fricción cognitiva en el segundo cero"
+        hook_intencion = "Desafiar una creencia común y detener el scroll en el segundo cero"
     else:
         hook_text = f"La mayoría ignora esto: {story_summary}."
         hook_intencion = "Curiosidad informada y detención de scroll"
@@ -54,8 +54,8 @@ def generate_script_draft(
         f"El problema real no fue la herramienta, fue querer delegar lo que yo todavía no dominaba. "
         f"Si tú no sabes explicar tu valor en una servilleta, nadie lo va a vender por ti: {clean_story}."
     )
-    desarrollo_intencion = "Construir autoridad de trinchera y desmontar la causa raíz"
-    desarrollo_camara = "Plano medio relajado, mirada fija, tono de café de socio a socio"
+    desarrollo_intencion = "Construir autoridad con experiencia práctica y desmontar la causa raíz"
+    desarrollo_camara = "Plano medio a cámara, mirada fija, tono natural y directo"
 
     # Formulate Cierre / CTA
     if series is not None:
@@ -70,7 +70,7 @@ def generate_script_draft(
             cierre_intencion = "Cierre de arco narrativo de saga y llamado a guardar la serie"
     else:
         cierre_text = "Antes de invertir para escalar, asegúrate de que tienes algo que funciona cuando estás tú solo."
-        cierre_intencion = "Fijar la regla de oro sin clichés promocionales"
+        cierre_intencion = "Fijar el principio clave sin clichés promocionales"
     cierre_camara = "Pausa de 1 segundo antes del corte a negro"
 
     if series is not None:

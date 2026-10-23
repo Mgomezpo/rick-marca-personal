@@ -21,7 +21,7 @@ DEFAULT_MIGUEL_RECEIPTS: List[StoryReceipt] = [
     StoryReceipt(
         id="ayudasismo_civico",
         summary="Construyó la plataforma cívica colaborativa AyudaSismo en horas durante la emergencia",
-        theme="instinto cívico y velocidad de trinchera",
+        theme="instinto de resolver rápido sin burocracia",
         concrete_details=["AyudaSismo", "horas críticas del terremoto", "despliegue en caliente sin pedir permiso"],
         punchline="Cuando la fricción es de vida o muerte, el código o funciona en 10 minutos o sobra.",
     ),
@@ -30,7 +30,7 @@ DEFAULT_MIGUEL_RECEIPTS: List[StoryReceipt] = [
         summary="Construyó a RICK e Ireal harto de los playbooks de marketing que matan la voz real",
         theme="antídoto al AI slop y playbooks clónicos",
         concrete_details=["RICK", "Ireal", "playbooks de marketing que vuelven todo genérico"],
-        punchline="Seguir los playbooks de marketing destruye tu voz; la trinchera es lo único que no se puede falsificar.",
+        punchline="Seguir los playbooks de marketing destruye tu voz; resolver problemas reales de clientes es lo único que no se puede falsificar.",
     ),
     StoryReceipt(
         id="reel_handoff_md",

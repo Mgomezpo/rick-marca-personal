@@ -75,7 +75,7 @@ def analyze_brand_health(
         action = "crear_demostracion_mecanismo"
     else:
         drift_notes = "Distribución saludable entre tus pilares estratégicos."
-        recommendation = "Mantén la cadencia actual y refuerza anécdotas de trinchera."
+        recommendation = "Mantén el ritmo actual y refuerza con historias reales o casos de tus clientes."
         action = "mantener_ritmo"
 
     return BrandHealthReport(
@@ -108,7 +108,7 @@ def format_brand_health_whatsapp(report: BrandHealthReport, handle: str) -> str:
 
     return (
         f"Oye {clean_handle}, revisé el equilibrio de nuestros pilares de contenido en el canal y se ve sólido.\n"
-        f"Nuestra tesis está consistente. ¿Tienes alguna anécdota fresca de trinchera para armar el próximo guion?"
+        f"Nuestra tesis está consistente. ¿Te pasó algo interesante esta semana con un cliente o en tus proyectos para armar el próximo guion?"
     )
 
 
@@ -126,7 +126,7 @@ def brand_health_node(state: GraphState) -> GraphState:
     recent_posts = ctx.get("recent_posts", [])
     declared_pillars = ctx.get("declared_pillars", [
         {"name": "Arquitectura de Sistemas", "target_pct": 50.0},
-        {"name": "Historias de Trinchera", "target_pct": 50.0},
+        {"name": "Casos Reales y Aprendizajes", "target_pct": 50.0},
     ])
 
     report = analyze_brand_health(user_id, recent_posts, declared_pillars)

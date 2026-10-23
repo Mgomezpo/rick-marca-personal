@@ -203,7 +203,7 @@ def rick_strategist_node(state: GraphState) -> GraphState:
             f"- Si el creador tiene la mente en blanco o está bloqueado: haz el heavy lifting, proponle 2 opciones concretas basadas en sus propios recibos.\n"
             f"- Si hace preguntas meta (ChatGPT vs RICK, precios, arquitectura, /reset): responde con ingenio y anclaje en sus proyectos reales y redirígelo al guion.\n"
             f"- Si comparte una anécdota: profundiza en la fricción real y sugiere estructurar el guion (o saga de 2 partes si es densa).\n"
-            f"- Tono: Head of Content, socio interno de trinchera, directo, cero relleno corporativo, cero clichés de IA.\n\n"
+            f"- Tono: Head of Content, socio interno del equipo, directo, cero relleno corporativo, cero clichés de IA.\n\n"
             f"Responde como RICK directamente al creador:"
         )
 
@@ -217,8 +217,8 @@ def rick_strategist_node(state: GraphState) -> GraphState:
     if intent == "cold_onboarding":
         handle = profile.instagram_handle if profile else "creador"
         response = (
-            f"¡qué más @{handle.lstrip('@')}! ya escaneé tu cuenta y tengo tus primeros recibos listos en la recámara. "
-            f"¿qué fricción o lección real trabajamos hoy para el próximo guion?"
+            f"¡qué más @{handle.lstrip('@')}! ya escaneé tu cuenta y tengo tus primeras historias reales listas para grabar. "
+            f"¿qué problema o experiencia con clientes trabajamos hoy para el próximo guion?"
         )
 
     elif intent == "blocked_creator":
@@ -226,7 +226,7 @@ def rick_strategist_node(state: GraphState) -> GraphState:
             s1 = story_bank[0]
             s2 = story_bank[1]
             response = (
-                "tranquilo, no tienes que inventar nada de cero hoy. ya tienes historias reales listas en la recámara:\n\n"
+                "tranquilo, no tienes que inventar nada de cero hoy. ya tienes historias reales listas para grabar:\n\n"
                 f"1. {s1.theme.capitalize()}: {s1.summary}.\n"
                 f"2. {s2.theme.capitalize()}: {s2.summary}.\n\n"
                 "dime cuál te vibra más y yo hago el trabajo pesado de estructurar el gancho visual y el quiebre."
@@ -249,7 +249,7 @@ def rick_strategist_node(state: GraphState) -> GraphState:
     elif intent == "chat":
         response = (
             "Buen día. En el equipo tenemos los referentes y números al día. "
-            "¿Qué fricción o anécdota de trinchera trabajamos hoy para el canal?"
+            "¿Qué problema o anécdota real con clientes trabajamos hoy para el canal?"
         )
 
     elif intent == "extract_story":
@@ -271,7 +271,7 @@ def rick_strategist_node(state: GraphState) -> GraphState:
         else:
             response = "Listo. Convoquemos al guionista para estructurar la pieza en 3 bloques."
     else:
-        response = "¿Qué fricción o lección real trabajamos hoy?"
+        response = "¿Qué problema o experiencia real trabajamos hoy?"
 
     state_updates["final_response"] = response
     return update_state(state, **state_updates)

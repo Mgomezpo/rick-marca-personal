@@ -15,8 +15,8 @@ def generate_trench_inquiry(handle: str, inactive_days: int = 3, receipt: Option
     return (
         f"Oye {clean_handle}, algo que destaca en tu instinto es que no publicas por cumplir; "
         f"pero en el equipo llevamos casi dos días sin mover piezas en el canal.\n\n"
-        f"Mientras el 90% de la gente copia playbooks clónicos de marketing, tu mejor contenido "
-        f"siempre sale de la trinchera cruda.\n\n"
+        f"Mientras el 90% de la gente copia plantillas genéricas de marketing, tu mejor contenido "
+        f"siempre sale de resolver problemas reales en el día a día.\n\n"
         f"¿Qué fue lo más frustrante o inesperado que viviste hoy con un cliente o en tu código?\n\n"
         f"Mándame una nota de voz de 20 a 30 segundos sin filtros; de ahí sacamos el próximo guion."
     )

@@ -89,7 +89,7 @@ def evaluate_governor(
         return GovernorDecision(
             allowed=False,
             reason=(
-                f"Indagación de trinchera programada para el final de la jornada (17:00 a 19:30). "
+                f"Reactivación por inactividad programada para el final de la jornada (17:00 a 19:30). "
                 f"Hora actual: {int(current_local_hour):02d}:{int(current_local_minute):02d}."
             ),
             hours_since_last_ping=hours_since_last_ping,

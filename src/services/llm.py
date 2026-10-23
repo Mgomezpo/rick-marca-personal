@@ -120,8 +120,8 @@ class LLMService:
             return (
                 "la diferencia con chatgpt o claude es que ellos no tienen tu contexto vivo. "
                 "si les pides un guion, te dan un ensayo con subtítulos corporativos y frases como 'en este mundo cambiante'. "
-                "yo tengo tus 5 recibos reales en memoria: desde cuando automatizaste en 30 minutos el excel de la clínica de tu papá para devolverle los domingos, "
-                "hasta la trinchera de ayudasismo y el quiebre de handoff.md. cada gancho que armamos parte de lo que ya viviste, no de un playbook clónico.\n\n"
+                "yo tengo tus 5 historias reales en memoria: desde cuando automatizaste en 30 minutos el excel de la clínica de tu papá para devolverle los domingos, "
+                "hasta la creación cívica de ayudasismo y el aprendizaje de handoff.md. cada gancho que armamos parte de lo que ya viviste, no de un playbook clónico.\n\n"
                 "¿quieres que bajemos esa primera pieza hoy?"
             )
 
@@ -130,14 +130,14 @@ class LLMService:
             return (
                 "jajaja buen intento, pero mi trabajo no es venderte humo por un dólar. "
                 "un solo reel bien colocado que te posicione como la voz técnica de referencia en tu nicho vale cien veces más que cualquier suscripción de juguete. "
-                "además, los números de tus referentes demuestran que la trinchera convierte, no los descuentos.\n\n"
+                "además, los números de tus referentes demuestran que los casos reales y los resultados convierten, no los descuentos.\n\n"
                 "¿te parece si dejamos el regateo y armamos la pieza de la semana?"
             )
 
         # Blank mind / blocked creator (Heavy Lifting by RICK)
         if "mente en blanco" in u_lower or "bloqueado" in u_lower or "bloqueada" in u_lower or "sin ideas" in u_lower:
             return (
-                "tranquilo, no tienes que inventar nada de cero hoy. ya tienes historias reales listas en la recámara:\n\n"
+                "tranquilo, no tienes que inventar nada de cero hoy. ya tienes historias reales listas para grabar:\n\n"
                 "1. por qué seguir playbooks de marketing mata tu voz (la razón exacta por la que decidiste construir a rick e ireal).\n"
                 "2. la automatización de 30 minutos con macros de excel para la clínica dental de tu papá para devolverle los domingos.\n\n"
                 "dime cuál te vibra más y yo hago el trabajo pesado de estructurar el gancho visual y el quiebre."
@@ -175,7 +175,7 @@ class LLMService:
         # General greeting or open dialogue
         return (
             "Buen día. En el equipo tenemos los referentes y números al día. "
-            "¿Qué fricción o anécdota de trinchera trabajamos hoy para el canal?"
+            "¿Qué problema o anécdota real con clientes trabajamos hoy para el canal?"
         )
 
 

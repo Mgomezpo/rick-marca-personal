@@ -179,5 +179,5 @@ def test_stanley_meta_questions_and_smooth_redirection():
     assert res is not None
     res_lower = res.lower()
     assert "chatgpt" in res_lower or "contexto" in res_lower
-    assert "recibos" in res_lower or "excel" in res_lower or "domingos" in res_lower or "trinchera" in res_lower
+    assert "historias" in res_lower or "excel" in res_lower or "domingos" in res_lower or "ayudasismo" in res_lower
 

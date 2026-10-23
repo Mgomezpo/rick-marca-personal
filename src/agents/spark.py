@@ -36,7 +36,7 @@ def generate_proactive_spark(
         adapted_angle = f"Demostración de mecanismo aplicada a: '{creator_thesis}'."
     else:
         suggested_hook = f"El error más costoso que veo en {creator_nicho} cuando intentan escalar."
-        adapted_angle = f"Fricción de trinchera respaldada por: '{creator_thesis}'."
+        adapted_angle = f"Problema real de clientes respaldado por: '{creator_thesis}'."
 
     return ProactiveSpark(
         spark_id=f"spark_{winning_pattern.pattern_id}",

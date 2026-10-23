@@ -27,13 +27,13 @@ class ReceiptExtractorService:
         """
         system_prompt = (
             "Eres el extractor de memorias episódicas (StoryReceipts) del equipo de RICK.\n"
-            "Tu tarea es analizar el texto/posts de un creador y extraer anécdotas de trinchera reales.\n"
+            "Tu tarea es analizar el texto/posts de un creador y extraer anécdotas y experiencias vividas reales.\n"
             "Cada anécdota debe tener:\n"
             "- id: Identificador en snake_case (ej. 'agencia_cancelada_2026').\n"
             "- summary: Resumen conciso del hecho real (máx 20 palabras).\n"
             "- theme: Tesis o postura contrarian que defiende.\n"
             "- concrete_details: Lista de 2-4 detalles hiper-específicos (nombres, tiempos, herramientas).\n"
-            "- punchline: La lección de trinchera o quiebre de consenso.\n\n"
+            "- punchline: El aprendizaje práctico o la conclusión memorable.\n\n"
             "Devuelve ÚNICAMENTE un JSON array válido con los objetos extraídos."
         )
 
@@ -68,7 +68,7 @@ class ReceiptExtractorService:
                         StoryReceipt(
                             id=item.get("id", f"receipt_{len(receipts)+1}"),
                             summary=item.get("summary", ""),
-                            theme=item.get("theme", "Trinchera real"),
+                            theme=item.get("theme", "Experiencia real"),
                             concrete_details=item.get("concrete_details", []),
                             punchline=item.get("punchline", ""),
                         )

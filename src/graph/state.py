@@ -10,7 +10,7 @@ class StoryReceipt(BaseModel):
     summary: str = Field(..., description="Resumen conciso del hecho real")
     theme: str = Field(..., description="Tesis o valor central (ej. 'alivio humano > software inflado')")
     concrete_details: List[str] = Field(default_factory=list, description="Detalles hiper-específicos (nombres, tiempos, herramientas)")
-    punchline: Optional[str] = Field(default=None, description="La conclusión o lección de trinchera que deja")
+    punchline: Optional[str] = Field(default=None, description="La conclusión o aprendizaje práctico que deja")
 
 
 class ScriptBlock(BaseModel):
