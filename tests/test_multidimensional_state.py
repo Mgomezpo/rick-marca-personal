@@ -74,7 +74,7 @@ def test_script_draft_backward_compatibility_standalone():
     cierre = ScriptBlock(texto="Cierre texto", intencion="Intención", camara="Pausa")
 
     draft = ScriptDraft(
-        titulo="Pieza Única de Trinchera",
+        titulo="Pieza Única de Autoridad",
         hook=hook,
         desarrollo=desarrollo,
         cierre=cierre,

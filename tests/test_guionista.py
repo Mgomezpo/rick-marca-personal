@@ -17,7 +17,7 @@ def test_generate_script_draft_canonical_structure():
         user_id="u1",
         instagram_handle="miguel_gomezpo",
         nicho="Estrategia y Negocios",
-        tono_voz="directo y de trinchera",
+        tono_voz="directo y auténtico",
     )
     pattern = WinningPattern(
         pattern_id="pat_confesion",

@@ -31,6 +31,31 @@ class RadarIngestionService:
         self._recently_used_creators: Dict[str, set] = defaultdict(set)
         self._radar = MarketRadar()
 
+    def populate_from_niche_search(
+        self,
+        user_id: str,
+        keywords: List[str],
+        limit: int = 15,
+    ) -> List[MatrixRow]:
+        """
+        Queries Apify by niche keywords, populates the tenant's cache, and returns the rows.
+        """
+        from src.services.instagram_scraper import instagram_scraper_service
+        rows = instagram_scraper_service.search_niche_reels(keywords=keywords, limit=limit)
+        if rows:
+            self._matrix_cache[user_id] = rows
+        return rows
+
+    def ingest_shared_link(self, user_id: str, url: str) -> Optional[MatrixRow]:
+        """
+        Extracts metrics and hook from a user-shared link and indexes it into the tenant cache.
+        """
+        from src.services.instagram_scraper import instagram_scraper_service
+        row = instagram_scraper_service.scrape_shared_link(url)
+        if row:
+            self._matrix_cache[user_id].append(row)
+        return row
+
     def ingest_creator_posts(
         self,
         user_id: str,

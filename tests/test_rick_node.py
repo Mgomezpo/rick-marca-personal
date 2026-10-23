@@ -112,15 +112,20 @@ def test_rick_node_direct_transition_when_scene_and_friction_provided():
 
 
 def test_rick_system_prompt_and_nodes_embody_internal_team_identity():
-    # Prompt asserts internal team belonging
+    # Prompt asserts internal team belonging and personal brand assistant role
+    assert "asistente" in RICK_CANONICAL_SYSTEM_PROMPT.lower()
+    assert "marca personal" in RICK_CANONICAL_SYSTEM_PROMPT.lower()
     assert "Head of Content" in RICK_CANONICAL_SYSTEM_PROMPT
     assert "nuestro canal" in RICK_CANONICAL_SYSTEM_PROMPT
     assert "revisemos" in RICK_CANONICAL_SYSTEM_PROMPT
+    assert "cuánto vale eso" not in RICK_CANONICAL_SYSTEM_PROMPT.lower()
+    assert "acordamos juntos" not in RICK_CANONICAL_SYSTEM_PROMPT.lower()
+    assert "trinchera" not in RICK_CANONICAL_SYSTEM_PROMPT.lower()
 
     # Absence of cold external consultant or generic chatbot phrases
     banned_external_phrases = [
         "tu consultor", "servicio externo", "como IA", "como modelo de lenguaje",
-        "mi cliente", "te entrego la consultoría"
+        "mi cliente", "te entrego la consultoría", "trinchera"
     ]
     for banned in banned_external_phrases:
         assert banned not in RICK_CANONICAL_SYSTEM_PROMPT
@@ -215,11 +220,14 @@ def test_tenant_2_cold_onboarding_receipt_extraction():
 
     assert response is not None
     assert result_state["current_intent"] == "cold_onboarding"
+    assert "asistente de tu marca personal" in response.lower()
+    assert "tu prueba corre por mi cuenta" in response.lower()
+    assert "te vas a convencer de seguir trabajando conmigo" in response.lower()
+    assert "cuánto vale eso" not in response.lower()
     assert len(result_state["story_bank"]) >= 2
     # Verify receipts belong to Tenant 2, NOT Miguel's dad or AyudaSismo
     receipt_ids = [r.id for r in result_state["story_bank"]]
     assert any("carlos_growth" in r_id for r_id in receipt_ids)
-    assert response is not None
 
 
 

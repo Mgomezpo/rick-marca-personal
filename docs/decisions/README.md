@@ -17,6 +17,7 @@ Cada registro sigue el estándar de documentación técnica y captura el context
 | [**ADR-005**](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-005-multi-tenant-supabase-isolation.md) | Aislamiento Multi-Tenant y Persistencia de Sesión | **Accepted** | 2026-10-19 | Partición estricta por `user_id` en Supabase con RLS y persistencia multi-turno. |
 | [**ADR-006**](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-006-wide-fresh-radar-sampling.md) | Muestreo Amplio de Radar y Exclusión Anti-Solapamiento | **Accepted** | 2026-10-19 | Pool de 20 referentes, exclusión de posts a 30 días y rotación de referentes a 7 días. |
 | [**ADR-007**](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-007-multidimensional-content-architecture.md) | Arquitectura de Contenido Multidimensional: Sagas, Pilares y Planes | **Accepted** | 2026-10-19 | Combinatoria libre y desacoplada de piezas sueltas, pilares, sagas continuas y planes sin DDL destructivo. |
+| [**ADR-008**](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-008-apify-niche-discovery-and-conversational-onboarding.md) | Descubrimiento Dinámico de Nicho vía Apify, Ingesta de Referencias y Onboarding en 4 Etapas | **Accepted** | 2026-10-23 | Búsqueda dinámica con Apify, ingesta de reels compartidos en chat, erradicación de jerga bélica ("trinchera") y onboarding en 4 etapas. |
 
 ---
 

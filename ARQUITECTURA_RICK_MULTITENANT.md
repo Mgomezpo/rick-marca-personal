@@ -1,8 +1,8 @@
 # Arquitectura del Motor RICK Multitenant Agent Engine
 
-> **Versión del Sistema:** 1.1.0  
+> **Versión del Sistema:** 1.2.0  
 > **Fecha de Actualización:** Octubre 2026  
-> **Estado Operativo:** Producción / Suite Completa Verificada (>95 tests pasando en verde)  
+> **Estado Operativo:** Producción / Suite Completa Verificada (110 tests pasando en verde)  
 > **Framework:** FastAPI + Python 3.11 + State Graph Engine (LangGraph design) + Supabase PostgreSQL  
 > **Canal Principal:** Meta WhatsApp Cloud API (Outbound & Inbound con ACK $< 200$ ms)  
 
@@ -13,27 +13,28 @@
 1. [Resumen Ejecutivo y Estado Actual](#1-resumen-ejecutivo-y-estado-actual)
 2. [Diagrama General de la Arquitectura](#2-diagrama-general-de-la-arquitectura)
 3. [El Esquema de Estado Central (Core State Graph)](#3-el-esquema-de-estado-central-core-state-graph)
-4. [Flujo Reactivo: Conversación y Mayéutica de Trinchera](#4-flujo-reactivo-conversación-y-mayéutica-de-trinchera)
+4. [Flujo Reactivo: Conversación y Mayéutica Basada en Experiencia Real](#4-flujo-reactivo-conversación-y-mayéutica-basada-en-experiencia-real)
 5. [Flujo Proactivo: Los 4 Loops Autónomos](#5-flujo-proactivo-los-4-loops-autónomos)
 6. [Gobernador Anti-Spam y Control de Cadencia](#6-gobernador-anti-spam-y-control-de-cadencia)
 7. [Radar de Mercado Desacoplado y Memoria de Rotación](#7-radar-de-mercado-desacoplado-y-memoria-de-rotación)
 8. [Loop de Calidad Cerrado: Evaluator-Optimizer](#8-loop-de-calidad-cerrado-evaluator-optimizer)
 9. [Aislamiento Multi-Tenant y Persistencia en Supabase](#9-aislamiento-multi-tenant-y-persistencia-en-supabase)
-10. [Endpoints de la API y Webhook de WhatsApp](#10-endpoints-de-la-api-y-webhook-de-whatsapp)
+10: [Endpoints de la API y Webhook de WhatsApp](#10-endpoints-de-la-api-y-webhook-de-whatsapp)
 11. [Registro de Decisiones Arquitectónicas (ADRs)](#11-registro-de-decisiones-arquitectónicas-adrs)
 12. [Arquitectura de Contenido Multidimensional (Sagas, Pilares, Planes y Piezas Sueltas)](#12-arquitectura-de-contenido-multidimensional-sagas-pilares-planes-y-piezas-sueltas)
+13. [Descubrimiento Dinámico de Nicho (Apify), Enlaces de Referencia y Onboarding en 4 Etapas](#13-descubrimiento-dinámico-de-nicho-apify-enlaces-de-referencia-y-onboarding-en-4-etapas)
 
 ---
 
 ## 1. Resumen Ejecutivo y Estado Actual
 
-El motor **RICK Multitenant Agent Engine** es un estratega de marca personal autónomo que opera como un miembro de equipo interno para creadores de contenido a través de WhatsApp.
+El motor **RICK Multitenant Agent Engine** es un estratega y par de marca personal autónomo que opera como un miembro de equipo interno para creadores de contenido a través de WhatsApp.
 
 A diferencia de chatbots genéricos o secuencias rígidas, RICK opera sobre un **Grafo de Estado funcional (`RickGraphEngine`)** que bifurca el procesamiento en dos canales complementarios:
-1. **Canal Reactivo (Conversacional):** Ingesta de mensajes de WhatsApp en $< 200$ ms, mayéutica creativa inspirada en Rick Rubin (*The Creative Act*), extracción de historias de trinchera y generación de guiones técnicos en 3 bloques canónicos con loop cerrado de calidad anti-plagio y anti-slop.
+1. **Canal Reactivo (Conversacional):** Ingesta de mensajes de WhatsApp en $< 200$ ms, mayéutica creativa inspirada en Rick Rubin (*The Creative Act*), extracción de anécdotas y aprendizajes reales y generación de guiones técnicos en 3 bloques canónicos con loop cerrado de calidad anti-plagio y anti-slop.
 2. **Canal Proactivo (Autónomo):** Auditorías periódicas de pilares de marca, detección de anomalías virales en el mercado y preguntas de reactivación tras inactividad, todas reguladas por un **Gobernador Anti-Spam** determinista que garantiza cero spam y estricto respeto a los horarios del creador.
 
-El código se encuentra completamente implementado en el paquete raíz `src/`, con 82 pruebas automatizadas unitarias y de integración pasando al 100%.
+El código se encuentra completamente implementado en el paquete raíz `src/`, con 110 pruebas automatizadas unitarias y de integración pasando al 100%.
 
 ---
 
@@ -130,13 +131,13 @@ Todas las mutaciones se realizan a través de `update_state(state, **kwargs)`, d
 
 ---
 
-## 4. Flujo Reactivo: Conversación y Mayéutica de Trinchera
+## 4. Flujo Reactivo: Conversación y Mayéutica Basada en Experiencia Real
 
 Cuando el creador escribe un mensaje a WhatsApp, el orquestador ejecuta el nodo [`src/agents/rick.py`](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/src/agents/rick.py):
 
 ### 4.1 La Matriz de Limitación Verbal de Rick Rubin
-1. **Nivel 1 (Charla y Calibración):** Respuestas concisas de 30 a 60 palabras, sin cortesías corporativas ni teoría abstracta. Tono directo de cómplice de trinchera.
-2. **Nivel 2 (Indagación Mayéutica de Trinchera):** Exactamente **una sola pregunta por turno** para extraer la escena concreta ("¿Dónde estabas exactamente?") y la fricción real ("¿Qué era lo que nadie se atrevía a decir?").
+1. **Nivel 1 (Charla y Calibración):** Respuestas concisas de 30 a 60 palabras, sin cortesías corporativas ni teoría abstracta. Tono directo de cómplice y par creativo.
+2. **Nivel 2 (Indagación Mayéutica de Experiencia Real):** Exactamente **una sola pregunta por turno** para extraer la escena concreta ("¿Dónde estabas exactamente?") y la fricción real ("¿Qué era lo que nadie se atrevía a decir?").
 3. **Nivel 3 (Entrega de Obra Técnica):** Transición automática a la generación de guion en cuanto el creador provee escena y fricción, sin forzar turnos redundantes si el mensaje inicial ya traía ambos elementos.
 
 ---
@@ -243,6 +244,7 @@ Para comprender el razonamiento histórico, alternativas descartadas y compromis
 - [**ADR-005:** Aislamiento Multi-Tenant y Persistencia de Sesión](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-005-multi-tenant-supabase-isolation.md)
 - [**ADR-006:** Muestreo Amplio de Radar y Exclusión Anti-Solapamiento](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-006-wide-fresh-radar-sampling.md)
 - [**ADR-007:** Arquitectura de Contenido Multidimensional: Sagas, Pilares y Planes](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-007-multidimensional-content-architecture.md)
+- [**ADR-008:** Descubrimiento Dinámico de Nicho vía Apify, Ingesta de Referencias y Onboarding en 4 Etapas](file:///c:/Users/mgome/OneDrive/Documents/RICK%20Multitenant/docs/decisions/ADR-008-apify-niche-discovery-and-conversational-onboarding.md)
 
 ---
 
@@ -257,7 +259,7 @@ Cualquier combinación de las 4 dimensiones es válida y nativamente soportada:
 ```mermaid
 flowchart TD
     subgraph DIMS["Dimensiones de Contenido Desacopladas"]
-        D1["1. Standalone\n(Pieza única y espontánea de trinchera)"]
+        D1["1. Standalone\n(Pieza única y espontánea de experiencia real)"]
         D2["2. Pilar de Marca\n(Categoría estratégica de voz y autoridad)"]
         D3["3. Saga / Miniserie\n(Secuencia episódica con continuidad y cliffhangers)"]
         D4["4. Plan / Campaña\n(Lote calendarizado con objetivo temporal)"]
@@ -360,4 +362,40 @@ RICK opera con la mayéutica socrática de Rick Rubin, guiando al creador sin im
 3. **Respeto a la Decisión del Creador:**
    - Si el usuario responde *"una sola pieza"* o *"al grano"*, RICK genera inmediatamente el guion autoconclusivo sin insistir.
    - Si responde *"saga de 2 partes"* o *"miniserie"*, RICK estructura la saga, genera el Episodio 1 con metadatos `SeriesMetadata` y prepara el terreno para el Episodio 2.
+
+---
+
+## 13. Descubrimiento Dinámico de Nicho (Apify), Enlaces de Referencia y Onboarding en 4 Etapas
+
+La versión `1.2.0` de RICK revoluciona la captación de benchmark de mercado y la bienvenida al creador, eliminando por completo cualquier jerga militar o artificial (*"trinchera"*):
+
+### 13.1 Scraper Dinámico de Reels vía Apify (`src/services/instagram_scraper.py`)
+En lugar de depender exclusivamente de cuentas fijas precargadas, el servicio `InstagramScraperService` utiliza el actor de Apify `clockworks~instagram-reels-scraper` para buscar reels virales en tiempo real según los tópicos del creador:
+- **`search_niche_reels(keywords, max_reels=15)`:** Retorna URLs reales de Instagram Reels, nombres de usuario, fecha, visualizaciones, likes, comentarios y captions.
+- **`scrape_shared_link(url)`:** Inspecciona un reel específico cuando el creador comparte un enlace directo en la conversación.
+- **Modo Offline / CI:** Cuenta con un mock determinista para pruebas automáticas y entornos sin credenciales configuradas, garantizando pruebas 100% confiables en $< 1.5$s.
+
+### 13.2 Ingesta y Caché Sub-50ms en el Radar (`src/services/radar_ingestion.py`)
+Los reels descubiertos se indexan en el radar calculando la mediana de visualizaciones del nicho y el multiplicador de rendimiento relativo $R = \text{views}/\text{median}$. Aquellos con $R \ge 1.5\times$ son marcados como anomalías ganadoras y quedan disponibles de inmediato para fundamentar propuestas de contenido sin latencia perceptible.
+
+### 13.3 Ingesta de Enlaces Compartidos en WhatsApp (`src/agents/rick.py`)
+El clasificador de intenciones (`classify_intent`) incluye el tipo `share_reference_link`. Al recibir un link de Instagram Reel:
+1. RICK extrae la URL y consulta sus métricas.
+2. Analiza el gancho, la retención y el ángulo psicológico del video.
+3. Devuelve al usuario un desglose directo en WhatsApp con ideas para adaptarlo a su propia voz y contexto profesional.
+
+### 13.4 Secuencia de Onboarding Canónica en 4 Etapas (`src/agents/prompts.py`)
+Para nuevos creadores, RICK ejecuta una secuencia conversacional metódica:
+1. **Etapa 1 (Apertura y Oferta de Prueba):**
+   > *"Tu prueba corre por mi cuenta: después de que trabajemos juntos un tiempo, seguro que te vas a convencer de seguir trabajando conmigo. ¿Cuáles son tus redes? Déjame ver qué has estado haciendo 📲"*
+2. **Etapa 2 (Diagnóstico de Huella & Pregunta 1):**
+   RICK revisa sus perfiles y lanza la primera pregunta estratégica:
+   > *"¿Qué quieres lograr con tu marca personal? ¿Cuál es tu objetivo?"*
+3. **Etapa 3 (Cosmovisión & Pregunta 2):**
+   Indaga sobre las mentiras comunes de su industria, mitos o posturas contraintuitivas que defiende con base en su experiencia práctica real.
+4. **Etapa 4 (Perfilado, Validación y 3 Opciones de Video):**
+   Sintetiza el perfil (Público Objetivo, Objetivo, Nicho, Posturas, Tono), valida con el creador y entrega 3 conceptos de video fundamentados con enlaces reales de Instagram descubiertos por el radar.
+
+### 13.5 Política Estricta de Cero Falsas Promesas
+Se prohíbe terminantemente prometer herramientas o dashboards inexistentes (como placeholders `[link]` o paneles web). Toda la inteligencia de mercado, ganchos y guiones se entregan de forma limpia y directa en el chat de WhatsApp.
 

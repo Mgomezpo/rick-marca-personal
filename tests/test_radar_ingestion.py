@@ -135,3 +135,41 @@ def test_api_proactive_tick_e2e_with_wide_radar_cache():
     assert len(history) >= 1
     assert "radar del equipo" in history[-1].content.lower()
 
+
+def test_instagram_scraper_niche_search_returns_real_urls():
+    from src.services.instagram_scraper import instagram_scraper_service
+    rows = instagram_scraper_service.search_niche_reels(keywords=["ia", "automatizacion"], limit=3)
+    assert len(rows) == 3
+    for r in rows:
+        assert r.post_id.startswith("https://www.instagram.com/reel/")
+        assert r.relative_performance >= 1.5
+        assert r.account_handle.startswith("@")
+        assert len(r.hook_text) > 5
+
+
+def test_radar_ingestion_populates_from_niche_search():
+    service = RadarIngestionService()
+    user_id = "user_niche_test_01"
+    rows = service.populate_from_niche_search(user_id, keywords=["ecommerce", "ventas"], limit=3)
+    assert len(rows) == 3
+    cached = service.get_cached_matrix(user_id)
+    assert len(cached) == 3
+    assert cached[0].post_id.startswith("https://www.instagram.com/reel/")
+
+
+def test_rick_node_creator_shares_instagram_link():
+    from src.agents.rick import rick_strategist_node, classify_intent
+    from src.graph.state import create_initial_state, ConversationMessage
+
+    state = create_initial_state("user_link_test", "creador_demo")
+    user_msg = "Oye RICK, mira este reel que me gustó mucho: https://www.instagram.com/reel/C3abc101/"
+    state["messages"].append(ConversationMessage(role="user", content=user_msg))
+
+    assert classify_intent(user_msg, state) == "share_reference_link"
+
+    result_state = rick_strategist_node(state)
+    response = result_state["final_response"]
+    assert response is not None
+    assert "guardé" in response.lower() or "referentes" in response.lower() or "quiebre" in response.lower()
+
+

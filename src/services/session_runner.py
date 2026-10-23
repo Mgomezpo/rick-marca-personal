@@ -1,6 +1,6 @@
 """Unified Channel-Agnostic Session Runner for RICK Multitenant Engine."""
 import logging
-from typing import Optional
+from typing import Optional, List
 from src.db.repository import SupabaseRepository
 from src.graph.engine import RickGraphEngine
 from src.graph.state import ConversationMessage, create_initial_state
@@ -8,6 +8,43 @@ from src.graph.state import ConversationMessage, create_initial_state
 logger = logging.getLogger("rick.session_runner")
 repo = SupabaseRepository()
 engine = RickGraphEngine()
+
+
+def compress_conversation_window(
+    messages: List[ConversationMessage],
+    max_recent: int = 10,
+    threshold: int = 12,
+) -> List[ConversationMessage]:
+    """
+    Compresses conversation history when length exceeds threshold.
+    Older turns are synthesized into a single compact context message,
+    while keeping the most recent `max_recent` messages intact.
+    """
+    if len(messages) <= threshold:
+        return messages
+
+    older_messages = messages[:-max_recent]
+    recent_messages = messages[-max_recent:]
+
+    summary_snippets = []
+    for m in older_messages:
+        prefix = "Usuario" if m.role == "user" else "RICK"
+        content_preview = m.content.strip().replace("\n", " ")
+        if len(content_preview) > 80:
+            content_preview = content_preview[:77] + "..."
+        summary_snippets.append(f"{prefix}: {content_preview}")
+
+    summary_text = (
+        f"[Contexto de conversación previa comprimido ({len(older_messages)} mensajes)]: "
+        + "; ".join(summary_snippets)
+    )
+
+    synthetic_summary_message = ConversationMessage(
+        role="system",
+        content=summary_text,
+    )
+
+    return [synthetic_summary_message] + recent_messages
 
 
 def process_user_turn(
@@ -52,7 +89,8 @@ def process_user_turn(
             timestamp=timestamp or "",
         )
         active_repo.save_message(user_id, user_msg)
-        state["messages"] = active_repo.get_conversation(user_id)
+        raw_conversation = active_repo.get_conversation(user_id)
+        state["messages"] = compress_conversation_window(raw_conversation, max_recent=10, threshold=12)
 
         # Execute State Graph Engine
         final_state = active_engine.run(state)

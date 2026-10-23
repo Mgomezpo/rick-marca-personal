@@ -69,6 +69,32 @@ def check_plagiarism(script_text: str, referents_texts: List[str]) -> Tuple[bool
     return is_plagiarism, max_match
 
 
+def find_plagiarized_snippet(script_text: str, referents_texts: List[str]) -> Optional[str]:
+    """Finds the longest contiguous matching phrase between script and references."""
+    if not referents_texts:
+        return None
+    script_words = _clean_tokens(script_text)
+    if not script_words:
+        return None
+    longest_snippet: List[str] = []
+    for ref in referents_texts:
+        ref_words = _clean_tokens(ref)
+        for i in range(len(script_words)):
+            for j in range(len(ref_words)):
+                k = 0
+                while (
+                    i + k < len(script_words)
+                    and j + k < len(ref_words)
+                    and script_words[i + k] == ref_words[j + k]
+                ):
+                    k += 1
+                if k > len(longest_snippet):
+                    longest_snippet = script_words[i : i + k]
+    if len(longest_snippet) >= 5:
+        return " ".join(longest_snippet)
+    return None
+
+
 def calculate_simulation_probability(piezas_respaldo: int, avg_r: float) -> Dict[str, Any]:
     """
     Calculates estimated performance probability backed by empirical pieces and relative performance.
@@ -121,8 +147,18 @@ def evaluate_script_quality(
         score -= 1.5
 
     if is_plag:
-        slop_findings.append(f"Plagio detectado: {max_words} palabras consecutivas idénticas al referente.")
+        snippet = find_plagiarized_snippet(full_text, referents_texts)
+        snippet_msg = f": frase '{snippet}' coincide con el referente" if snippet else f": {max_words} palabras consecutivas idénticas al referente."
+        slop_findings.append(f"Plagio detectado ({max_words} palabras){snippet_msg}")
         score -= 5.0
+
+    # Dual-coding tension contrast check
+    if draft.visual_hook and draft.spoken_hook:
+        clean_v = draft.visual_hook.lower().strip(" .,'\"")
+        clean_s = draft.spoken_hook.lower().strip(" .,'\"")
+        if clean_v == clean_s or clean_v == clean_s[:len(clean_v)]:
+            slop_findings.append("Falta tensión Dual-Coding: el hook visual en pantalla repite textualmente el audio hablado.")
+            score -= 1.0
 
     score = max(1.0, min(10.0, round(score, 1)))
     passed = (score >= 8.0 and not is_plag)

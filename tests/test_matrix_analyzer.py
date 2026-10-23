@@ -35,7 +35,7 @@ def test_matrix_row_from_raw_calculates_r():
         "views": 30000,
         "hook_text": "Dejé de buscar clientes y empecé a buscar problemas reales.",
         "hook_type": "quiebre_creencia",
-        "format": "leccion_de_trinchera",
+        "format": "leccion_practica",
         "emotion": "autoridad",
         "duration_seconds": 50,
     }

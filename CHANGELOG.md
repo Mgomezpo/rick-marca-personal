@@ -4,6 +4,23 @@ All notable changes to the RICK Multitenant Agent Engine project will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-10-23
+
+### Added
+- **Dynamic Niche Discovery Scraper (`InstagramScraperService` in `src/services/instagram_scraper.py`):** Real Instagram Reels scraping via Apify actor `clockworks~instagram-reels-scraper` with metric extraction (`views`, `likes`, `comments`, `url`), deterministic mock fallback for offline/CI execution, and single reel inspection (`scrape_shared_link`).
+- **Creator-Shared Link Ingestion (`radar-ingestion` & `rick-strategist`):** Immediate ingestion and anomaly scoring ($R = \text{views}/\text{median}$) for user-submitted Instagram Reels links in WhatsApp, indexed into sub-50ms cache with `share_reference_link` intent routing.
+- **Canonic 4-Stage Onboarding Flow (`rick-strategist`):** Formalized WhatsApp conversational onboarding:
+  1. Opening with zero-cost trial offer (*"Tu prueba corre por mi cuenta..."*).
+  2. Digital footprint diagnosis & Objective extraction (Question 1: *"¿Qué quieres lograr con tu marca personal?"*).
+  3. Worldview & Contraintuitive Stances extraction (Question 2).
+  4. Structured profiling (Audience, Goal, Niche, Stances, Tone), peer validation, and delivery of 3 video concepts backed by real scraped Instagram URLs.
+- **Strict Anti-Hallucination & Zero-Fake-Link Policy:** Proscribed placeholders such as `[link]` and fictional dashboard promises; all viral patterns and strategic value are delivered natively within the WhatsApp chat.
+- **Architectural Documentation (`documentation-and-adrs`):** Registered ADR-008 (`docs/decisions/ADR-008-apify-niche-discovery-and-conversational-onboarding.md`) and Section 13 in `ARQUITECTURA_RICK_MULTITENANT.md`.
+
+### Changed
+- **Eradication of Military Jargon & "Trinchera":** Complete elimination of `"trinchera"` and militaristic slop across prompts (`RICK_CANONICAL_SYSTEM_PROMPT`), node logic, and test assertions in favor of authentic peer-to-peer personal branding language ("experiencia real", "en la práctica").
+- **Test Suite Expansion:** Expanded automated test suite from 82 to 110 unit and integration tests passing at 100% in $< 1.5$ seconds.
+
 ## [1.1.0] - 2026-10-19
 
 ### Added

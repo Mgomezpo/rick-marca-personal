@@ -6,6 +6,7 @@ from src.graph.state import (
     ConversationMessage,
     SeriesMetadata,
     StoryReceipt,
+    StrategistReasoning,
     update_state,
 )
 from src.services.llm import llm_service
@@ -34,6 +35,10 @@ def classify_intent(user_message: str, current_state: GraphState) -> str:
         "reunión", "reunion", "lanzamiento", "venta", "ventas", "desesperé", "desespere"
     ]
     has_story_keywords = any(k in msg for k in story_keywords)
+
+    # Intent: Shared reference link (creator sends a reel or post link they liked)
+    if "instagram.com/reel/" in msg or "instagram.com/p/" in msg or "tiktok.com/" in msg:
+        return "share_reference_link"
 
     # Intent: Blocked creator (Stanley-style heavy lifting trigger when no concrete story is provided)
     block_markers = [
@@ -130,6 +135,27 @@ def rick_strategist_node(state: GraphState) -> GraphState:
         onboarding_updates["story_bank"] = list(new_receipts)
         intent = "cold_onboarding"
 
+    # Process user-shared reference link (reels or posts sent by creator)
+    if intent == "share_reference_link":
+        from src.services.instagram_scraper import instagram_scraper_service
+        from src.services.radar_ingestion import radar_ingestion_service
+        from src.graph.state import WinningPattern
+        urls = instagram_scraper_service.extract_instagram_urls(last_user_message)
+        if urls:
+            row = radar_ingestion_service.ingest_shared_link(user_id=state.get("user_id", "default_user"), url=urls[0])
+            if row:
+                onboarding_updates["winning_patterns"] = [
+                    WinningPattern(
+                        pattern_id=f"pat_shared_{abs(hash(row.post_id)) % 10000}",
+                        tipo_hook=row.hook_type,
+                        formato=row.format,
+                        emocion=row.emotion,
+                        rendimiento_relativo_promedio=row.relative_performance,
+                        piezas_respaldo=1,
+                        ejemplos=[row.hook_text],
+                    )
+                ]
+
     state_updates = {"current_intent": intent, **onboarding_updates}
 
     # Extract accumulated story elements
@@ -186,6 +212,14 @@ def rick_strategist_node(state: GraphState) -> GraphState:
         else:
             state_updates["series_metadata"] = None
 
+    # Step 1A: Cognitive Internal Monologue Scratchpad
+    reasoning_trace = llm_service.think_and_route(
+        prompt=last_user_message,
+        story_bank=story_bank,
+        current_intent=intent,
+    )
+    state_updates["reasoning_trace"] = reasoning_trace
+
     # -------------------------------------------------------------
     # PATH A: LIVE PRODUCTION GENERATION (100% LLM Call)
     # -------------------------------------------------------------
@@ -201,17 +235,32 @@ def rick_strategist_node(state: GraphState) -> GraphState:
             f"RECIBOS REALES EN MEMORIA (LORE):\n{receipts_str}\n\n"
             f"HISTORIAL RECIENTE:\n{history_str}\n\n"
             f"ÚLTIMO MENSAJE DEL CREADOR: '{last_user_message}'\n\n"
-            f"INTENCIÓN DETECTADA: {intent}\n"
+            f"INTENCIÓN DETECTADA: {intent}\n\n"
+            f"[MONÓLOGO INTERNO Y RESTRICCIONES DE CALIDAD]:\n"
+            f"- Prohibido caer en esta trampa genérica: {reasoning_trace.cliche_trap_to_avoid}\n"
+            f"- Ángulo contrarian a sostener: {reasoning_trace.contrarian_angle}\n"
+            f"- Recibo/Historia real ancla: {reasoning_trace.selected_receipt_id or 'Ninguno específico'}\n"
+            f"- Subtexto analizado: {reasoning_trace.user_subtext}\n\n"
             f"INSTRUCCIONES CLAVE:\n"
-            f"- Si el creador no tiene recibos y acaba de entrar: dale la bienvenida al equipo y pídele su @ de Instagram para escanearlo.\n"
+            f"- REGLA TERMINANTE DE LENGUAJE: Cero metáforas militares o jerga belicista. Usa siempre 'experiencia real', 'práctica' o 'casos reales'.\n"
+            f"- FLUJO DE ONBOARDING Y CALIBRACIÓN:\n"
+            f"  1. Si no tiene redes registradas: preséntate como el nuevo asistente de su marca personal, asegura que su prueba corre por tu cuenta ('después de que trabajemos juntos un tiempo seguro te vas a convencer de seguir trabajando conmigo') y pídele sus redes ('¿Cuáles son tus redes? Déjame ver qué has estado haciendo 📲').\n"
+            f"  2. Si acaba de dar sus redes: dale un diagnóstico bueno y fundamentado de su feed (sin prisa ni superficialidad) y hazle la pregunta 1: '¿Qué quieres lograr con tu marca personal? ¿Cuál es tu objetivo?'.\n"
+            f"  3. Si ya respondió su objetivo: indaga en sus posturas ('¿Cuáles son tus posturas o visiones del mundo sobre los temas de tu marca? ¿Qué defiendes o ves diferente al resto?').\n"
+            f"- Si el creador comparte el link de un reel o creador que vio y le gustó: dale feedback con criterio editorial de Head of Content, destaca qué hace que ese gancho funcione, confirma que lo guardaste en el radar del equipo y proponle adaptar esa estructura a su marca.\n"
             f"- Si el creador tiene la mente en blanco o está bloqueado: haz el heavy lifting, proponle 2 opciones concretas basadas en sus propios recibos.\n"
             f"- Si hace preguntas meta (ChatGPT vs RICK, precios, arquitectura, /reset): responde con ingenio y anclaje en sus proyectos reales y redirígelo al guion.\n"
             f"- Si comparte una anécdota: profundiza en la fricción real y sugiere estructurar el guion (o saga de 2 partes si es densa).\n"
-            f"- Tono: Head of Content, socio interno del equipo, directo, cero relleno corporativo, cero clichés de IA.\n\n"
+            f"- Tono: Asistente de marca personal, Head of Content, socio interno del equipo, directo, cero relleno corporativo, cero clichés de IA.\n\n"
             f"Responde como RICK directamente al creador:"
         )
 
-        response = llm_service.generate(prompt=prompt, system_prompt=RICK_CANONICAL_SYSTEM_PROMPT, temperature=0.7)
+        response = llm_service.generate(
+            prompt=prompt,
+            system_prompt=RICK_CANONICAL_SYSTEM_PROMPT,
+            temperature=0.7,
+            model=llm_service.writer_model,
+        )
         state_updates["final_response"] = response
         return update_state(state, **state_updates)
 
@@ -221,8 +270,16 @@ def rick_strategist_node(state: GraphState) -> GraphState:
     if intent == "cold_onboarding":
         handle = profile.instagram_handle if profile else "creador"
         response = (
-            f"¡qué más @{handle.lstrip('@')}! ya escaneé tu cuenta y tengo tus primeras historias reales listas para grabar. "
+            f"¡qué más @{handle.lstrip('@')}! soy RICK, el nuevo asistente de tu marca personal. "
+            f"tu prueba corre por mi cuenta: después de que trabajemos juntos un tiempo, seguro que te vas a convencer de seguir trabajando conmigo. "
+            f"ya escaneé tu cuenta y tengo tus primeras historias reales listas para grabar. "
             f"¿qué problema o experiencia con clientes trabajamos hoy para el próximo guion?"
+        )
+
+    elif intent == "share_reference_link":
+        response = (
+            "¡buen ojo con esa pieza! le eché un ojo a la estructura: el gancho funciona porque rompe el dogma de inmediato sin rodeos. "
+            "ya lo guardé en nuestro banco de referentes del radar. ¿te parece si adaptamos ese mismo quiebre para tu próximo guion?"
         )
 
     elif intent == "blocked_creator":

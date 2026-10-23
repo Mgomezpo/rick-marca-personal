@@ -13,6 +13,18 @@ class StoryReceipt(BaseModel):
     punchline: Optional[str] = Field(default=None, description="La conclusión o aprendizaje práctico que deja")
 
 
+class StrategistReasoning(BaseModel):
+    """Structured internal monologue and reasoning scratchpad for the Strategist node."""
+    user_subtext: str = Field(..., description="Qué intenta expresar o qué problema real tiene el creador")
+    cliche_trap_to_avoid: str = Field(..., description="Qué respuesta genérica, tibia o cliché de IA debemos prohibir en este turno")
+    selected_receipt_id: Optional[str] = Field(default=None, description="ID del StoryReceipt del story_bank del creador más relevante para este turno")
+    contrarian_angle: str = Field(..., description="Tesis o ángulo a contracorriente que evita sonar a gurú genérico")
+    has_concrete_scene: bool = Field(default=False, description="Si la historia ya tiene escena/momento real")
+    has_root_friction: bool = Field(default=False, description="Si la historia ya tiene el error o verdad incómoda")
+    is_multipoint_story: bool = Field(default=False, description="Si la historia tiene múltiples puntos que ameritan sugerir saga de 2 partes vs pieza única")
+    routed_intent: str = Field(default="chat", description="Intent clasificado: chat, extract_story, generate_script, view_report, cold_onboarding, etc.")
+
+
 class ScriptBlock(BaseModel):
     """Canonical block of a technical script (Hook, Desarrollo, Cierre/CTA)."""
     texto: str = Field(..., description="Texto exacto hablado sin desvíos ni rodeos")
@@ -168,6 +180,8 @@ class GraphState(TypedDict, total=False):
     plan_id: Optional[str]
     # Episodic receipts
     story_bank: List[StoryReceipt]
+    # Cognitive scratchpad trace
+    reasoning_trace: Optional[StrategistReasoning]
 
 
 def create_initial_state(user_id: str, handle: str = "") -> GraphState:
@@ -198,6 +212,7 @@ def create_initial_state(user_id: str, handle: str = "") -> GraphState:
         pilar=None,
         plan_id=None,
         story_bank=[],
+        reasoning_trace=None,
     )
 
 
