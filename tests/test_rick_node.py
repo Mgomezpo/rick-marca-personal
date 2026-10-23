@@ -192,3 +192,34 @@ def test_rick_node_meta_question_handling():
     assert "¿" in response  # Smooth redirection question
 
 
+def test_tenant_2_cold_onboarding_receipt_extraction():
+    """
+    Test Tenant #2: A brand new user with NO prior receipts enters,
+    provides their Instagram handle @carlos_growth, and RICK extracts
+    their custom story bank automatically.
+    """
+    state = create_initial_state("user_tenant_2", "carlos_growth")
+    # Empty story bank to simulate a totally new tenant
+    state["story_bank"] = []
+    state["creator_profile"].story_bank = []
+
+    state["messages"].append(
+        ConversationMessage(
+            role="user",
+            content="Hola RICK, soy nuevo. Mi cuenta es @carlos_growth y hablo de ecommerce.",
+        )
+    )
+
+    result_state = rick_strategist_node(state)
+    response = result_state["final_response"]
+
+    assert response is not None
+    assert result_state["current_intent"] == "cold_onboarding"
+    assert len(result_state["story_bank"]) >= 2
+    # Verify receipts belong to Tenant 2, NOT Miguel's dad or AyudaSismo
+    receipt_ids = [r.id for r in result_state["story_bank"]]
+    assert any("carlos_growth" in r_id for r_id in receipt_ids)
+    assert response is not None
+
+
+

@@ -76,10 +76,21 @@ def process_whatsapp_background(payload: Dict[str, Any]) -> None:
                     user_id = f"wa_{sender_phone}"
                     sender_name = contacts[0].get("profile", {}).get("name", sender_phone) if contacts else sender_phone
 
-                    # Extract body text
+                    # Extract text or process audio voice note (Whisper-1 / Gemini)
                     text_body = ""
-                    if msg.get("type") == "text":
+                    msg_type = msg.get("type")
+                    if msg_type == "text":
                         text_body = msg.get("text", {}).get("body", "")
+                    elif msg_type == "audio":
+                        audio_info = msg.get("audio", {})
+                        media_id = audio_info.get("id")
+                        if media_id:
+                            from src.services.voice import voice_service
+                            audio_bytes = voice_service.download_whatsapp_media(media_id)
+                            if audio_bytes:
+                                mime = audio_info.get("mime_type", "audio/ogg")
+                                text_body = voice_service.transcribe_audio(audio_bytes, mime_type=mime)
+                                logger.info(f"WhatsApp audio {media_id} transcribed: '{text_body[:50]}...'")
 
                     if not text_body:
                         continue

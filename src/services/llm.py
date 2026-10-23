@@ -16,29 +16,32 @@ class LLMService:
         self.openai_key = os.getenv("OPENAI_API_KEY")
         self.gemini_key = os.getenv("GEMINI_API_KEY")
         self.default_model = os.getenv("OPENAI_MODEL", "gpt-4o")
-        self.is_test_env = (
-            os.getenv("APP_ENV") == "test"
-            or os.getenv("MOCK_LLM", "false").lower() == "true"
-            or "PYTEST_CURRENT_TEST" in os.environ
-        )
 
         self._openai_client = None
         self._gemini_client = None
 
-        if not self.is_test_env:
-            if self.openai_key:
-                try:
-                    import openai
-                    self._openai_client = openai.OpenAI(api_key=self.openai_key)
-                except Exception as e:
-                    logger.warning(f"Could not init OpenAI client: {e}")
+        if self.openai_key:
+            try:
+                import openai
+                self._openai_client = openai.OpenAI(api_key=self.openai_key)
+            except Exception as e:
+                logger.warning(f"Could not init OpenAI client: {e}")
 
-            if self.gemini_key:
-                try:
-                    from google import genai
-                    self._gemini_client = genai.Client(api_key=self.gemini_key)
-                except Exception as e:
-                    logger.warning(f"Could not init Gemini client: {e}")
+        if self.gemini_key:
+            try:
+                from google import genai
+                self._gemini_client = genai.Client(api_key=self.gemini_key)
+            except Exception as e:
+                logger.warning(f"Could not init Gemini client: {e}")
+
+    @property
+    def is_test_env(self) -> bool:
+        """Dynamically detect test environment or explicit mock override."""
+        return (
+            os.getenv("APP_ENV") == "test"
+            or os.getenv("MOCK_LLM", "false").lower() == "true"
+            or "PYTEST_CURRENT_TEST" in os.environ
+        )
 
     def generate(
         self,
@@ -101,12 +104,19 @@ class LLMService:
     def _mock_completion(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """
         Deterministic mock response for fast, offline unit testing.
-        Simulates Stanley-level contextual intelligence, empathy, and lore anchoring.
+        Extracts user intent and message to simulate Stanley-level intelligence without API calls.
         """
-        p_lower = prompt.lower()
+        user_msg = prompt
+        if "ÚLTIMO MENSAJE DEL CREADOR: '" in prompt:
+            try:
+                user_msg = prompt.split("ÚLTIMO MENSAJE DEL CREADOR: '", 1)[1].split("'", 1)[0]
+            except Exception:
+                user_msg = prompt
+
+        u_lower = user_msg.lower()
 
         # Meta question: architecture, how it works, why not chatgpt
-        if "arquitectura" in p_lower or "chatgpt" in p_lower or "claude" in p_lower or "como funcionas" in p_lower or "cómo funcionas" in p_lower:
+        if "chatgpt" in u_lower or "claude" in u_lower or "como funcionas" in u_lower or "cómo funcionas" in u_lower or "arquitectura" in u_lower:
             return (
                 "la diferencia con chatgpt o claude es que ellos no tienen tu contexto vivo. "
                 "si les pides un guion, te dan un ensayo con subtítulos corporativos y frases como 'en este mundo cambiante'. "
@@ -116,7 +126,7 @@ class LLMService:
             )
 
         # Haggling / pricing / reset
-        if "precio" in p_lower or "1 dolar" in p_lower or "$1" in p_lower or "regateo" in p_lower:
+        if "precio" in u_lower or "1 dolar" in u_lower or "$1" in u_lower or "regateo" in u_lower:
             return (
                 "jajaja buen intento, pero mi trabajo no es venderte humo por un dólar. "
                 "un solo reel bien colocado que te posicione como la voz técnica de referencia en tu nicho vale cien veces más que cualquier suscripción de juguete. "
@@ -125,7 +135,7 @@ class LLMService:
             )
 
         # Blank mind / blocked creator (Heavy Lifting by RICK)
-        if "mente en blanco" in p_lower or "bloqueado" in p_lower or "no sé qué decir" in p_lower or "no se que decir" in p_lower or "no sé qué grabar" in p_lower:
+        if "mente en blanco" in u_lower or "bloqueado" in u_lower or "bloqueada" in u_lower or "sin ideas" in u_lower:
             return (
                 "tranquilo, no tienes que inventar nada de cero hoy. ya tienes historias reales listas en la recámara:\n\n"
                 "1. por qué seguir playbooks de marketing mata tu voz (la razón exacta por la que decidiste construir a rick e ireal).\n"
@@ -133,8 +143,21 @@ class LLMService:
                 "dime cuál te vibra más y yo hago el trabajo pesado de estructurar el gancho visual y el quiebre."
             )
 
+        # Multi-point / saga detection in user story
+        if ("dos errores" in u_lower or "2 errores" in u_lower or "varias lecciones" in u_lower or "múltiples" in u_lower) and not ("una sola" in u_lower or "saga" in u_lower):
+            return "¿Hacemos una sola pieza al grano o te parece si armamos una saga de 2 partes?"
+
+        # Story extraction: missing scene or friction
+        if "reunión" in u_lower or "reunion" in u_lower or "oficina" in u_lower or "cliente" in u_lower:
+            if "error" in u_lower or "fricción" in u_lower or "friccion" in u_lower:
+                return "¿Quieres que montemos el guion sobre este quiebre?"
+            return "¿Cuál fue el error o la fricción que nadie vio en esa decisión?"
+
+        if "lanzamiento" in u_lower or "quebró" in u_lower or "desesperé" in u_lower or "negocio" in u_lower:
+            return "¿Qué pasó exactamente en ese momento? Cuéntame la escena sin adornos."
+
         # Script request
-        if "guion" in p_lower or "script" in p_lower or "armemos" in p_lower or "escribe" in p_lower:
+        if "guion" in u_lower or "script" in u_lower or "armemos" in u_lower or "escribe" in u_lower:
             return (
                 "aquí tienes la estructura lista para grabar:\n\n"
                 "**visual hook (en pantalla):**\n"
@@ -149,10 +172,10 @@ class LLMService:
                 "antes de gastar en escalar, asegúrate de que tienes algo que funciona cuando estás tú solo."
             )
 
-        # Greeting or open dialogue
+        # General greeting or open dialogue
         return (
-            "buenas. tengo el radar del nicho y tus aprendizajes al día. "
-            "¿qué fricción o lección real de estos días ponemos sobre la mesa para el canal?"
+            "Buen día. En el equipo tenemos los referentes y números al día. "
+            "¿Qué fricción o anécdota de trinchera trabajamos hoy para el canal?"
         )
 
 

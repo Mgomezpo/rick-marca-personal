@@ -297,3 +297,48 @@ def test_api_proactive_tick_endpoint(client):
     assert "@casidonovan" in history[-1].content
 
 
+def test_whatsapp_webhook_audio_voice_note_processing(client):
+    from src.api import webhook
+    phone = "573119998877"
+    audio_payload = {
+        "object": "whatsapp_business_account",
+        "entry": [
+            {
+                "id": "WHATSAPP_BUSINESS_ACCOUNT_ID",
+                "changes": [
+                    {
+                        "value": {
+                            "messaging_product": "whatsapp",
+                            "metadata": {"display_phone_number": "12345", "phone_number_id": "12345"},
+                            "contacts": [{"profile": {"name": "Test Audio Creator"}, "wa_id": phone}],
+                            "messages": [
+                                {
+                                    "from": phone,
+                                    "id": "wamid.AUDIO_MSG_123",
+                                    "timestamp": "1771234567",
+                                    "type": "audio",
+                                    "audio": {
+                                        "id": "media_audio_id_999",
+                                        "mime_type": "audio/ogg; codecs=opus",
+                                    },
+                                }
+                            ],
+                        },
+                        "field": "messages",
+                    }
+                ],
+            }
+        ],
+    }
+
+    res = client.post("/webhook/whatsapp", json=audio_payload)
+    assert res.status_code == 200
+
+    user_id = f"wa_{phone}"
+    stored_msgs = webhook.repo.get_conversation(user_id)
+    assert len(stored_msgs) >= 1
+    assert "user" in [m.role for m in stored_msgs]
+    user_msg_content = [m.content for m in stored_msgs if m.role == "user"][0]
+    assert len(user_msg_content) > 10
+
+
