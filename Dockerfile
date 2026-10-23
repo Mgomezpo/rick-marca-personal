@@ -20,6 +20,7 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
     PATH=/root/.local/bin:$PATH \
     PORT=8000
 

@@ -1,0 +1,18 @@
+services:
+  rick-multitenant:
+    build: .
+    container_name: rick-multitenant-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - TZ=America/Bogota
+      - PYTHONUNBUFFERED=1
+      - PORT=8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

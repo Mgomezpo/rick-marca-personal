@@ -9,7 +9,7 @@ from src.db.repository import SupabaseRepository
 app = FastAPI(
     title="RICK Multitenant Agent Engine",
     description="Autonomous Brand Strategist with Graph & Loop Engineering for WhatsApp",
-    version="1.0.0",
+    version="1.1.0",
 )
 
 # CORS configuration
@@ -36,7 +36,7 @@ def health_check():
     return {
         "status": "healthy" if db_ok else "degraded",
         "service": "rick-multitenant",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "database": "connected" if db_ok else "disconnected",
         "memory": {
             "total_mb": round(memory_info.total / (1024 * 1024), 1),
