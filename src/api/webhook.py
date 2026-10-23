@@ -89,6 +89,9 @@ def process_whatsapp_background(payload: Dict[str, Any]) -> None:
                     state = create_initial_state(user_id=user_id, handle=sender_name)
                     if profile:
                         state["creator_profile"] = profile
+                        state["story_bank"] = profile.story_bank
+                    else:
+                        state["story_bank"] = repo.get_story_bank(user_id)
 
                     # Load previous learnings from Supabase
                     state["learnings"] = repo.get_learnings(user_id)

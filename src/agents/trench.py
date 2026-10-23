@@ -1,18 +1,24 @@
-"""Trench Inquiry Module for Inactivity Reactivation (Proactive Loop C)."""
-from src.graph.state import GraphState, update_state
+"""Trench Inquiry Module for Inactivity Reactivation (Stanley Soapbox Ritual)."""
+from typing import Optional
+from src.graph.state import GraphState, StoryReceipt, update_state
 
 
-def generate_trench_inquiry(handle: str, inactive_days: int = 3) -> str:
+def generate_trench_inquiry(handle: str, inactive_days: int = 3, receipt: Optional[StoryReceipt] = None) -> str:
     """
-    Formulates a sharp, reflective question to pull a raw story out of the creator's real day.
-    Rubin mayeutics: authentic, non-judgmental, curious.
+    Stanley-style Soapbox Ritual inquiry for creator reactivation:
+    1. Sharp observation on creator's real stance and instinct.
+    2. Contrast against what 90% of the industry does.
+    3. Low-friction voice note CTA.
     Internal team voice: Head of Content checking in on the canal.
     """
     clean_handle = handle.lstrip("@")
     return (
-        f"Oye {clean_handle}, en el equipo llevamos casi dos días sin mover piezas en el canal.\n\n"
-        f"¿Qué fue lo más frustrante o inesperado que te pasó hoy con un cliente o en tu código?\n\n"
-        f"Grábame una nota de voz de 30 segundos sin filtros; de ahí sacamos el próximo guion."
+        f"Oye {clean_handle}, algo que destaca en tu instinto es que no publicas por cumplir; "
+        f"pero en el equipo llevamos casi dos días sin mover piezas en el canal.\n\n"
+        f"Mientras el 90% de la gente copia playbooks clónicos de marketing, tu mejor contenido "
+        f"siempre sale de la trinchera cruda.\n\n"
+        f"¿Qué fue lo más frustrante o inesperado que viviste hoy con un cliente o en tu código?\n\n"
+        f"Mándame una nota de voz de 20 a 30 segundos sin filtros; de ahí sacamos el próximo guion."
     )
 
 

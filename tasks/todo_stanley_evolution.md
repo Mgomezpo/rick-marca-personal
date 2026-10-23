@@ -1,0 +1,21 @@
+# Todo: Evolución RICK a Nivel Stanley
+
+- [x] **Fase 1: Memoria Episódica Real ("Lore & Receipts Bank")**
+  - [x] 1.1 Agregar `StoryReceipt` a `src/graph/state.py` y actualizar `CreatorProfile` con `story_bank`.
+  - [x] 1.2 Actualizar `src/db/repository.py` con persistencia de `story_bank` y sembrar historias reales de `@miguel_gomezpo` (AyudaSismo, clínica dental de su papá, RICK & Ireal, handoff.md, Bancolombia).
+- [x] **Fase 2: Motor LLM Híbrido y Prompts Stanley**
+  - [x] 2.1 Configurar `.env` en la raíz y crear `src/services/llm.py` con soporte dual (OpenAI/Gemini) y modo mock para tests ultrarrápidos.
+  - [x] 2.2 Reescribir `src/agents/prompts.py` con el System Prompt Maestro estilo Stanley (human-first, tuteo cómplice, anclaje en receipts).
+- [x] **Fase 3: Cerebro Conversacional & Heavy Lifting**
+  - [x] 3.1 Refactorizar `src/agents/rick.py` para eliminar validaciones mecánicas de `scene_markers` y `friction_markers`.
+  - [x] 3.2 Implementar asistencia activa con `story_bank` ante bloqueos creativos del usuario ("mente en blanco").
+  - [x] 3.3 Soporte de respuestas amplias y reflexivas ante preguntas meta y objeciones (comparación con ChatGPT, arquitectura, regateo).
+- [x] **Fase 4: Guionista con Dual-Coding Contrast y Formateador Limpio**
+  - [x] 4.1 Actualizar `src/agents/guionista.py` con el framework de 4 pasos (Payload, Creencia, Colisión, Dual-Coding Visual vs. Spoken).
+  - [x] 4.2 Desintoxicar `src/graph/formatter.py`: formato Dual-Coding contrastante sin fórmulas acartonadas.
+  - [x] 4.3 Ajustar `src/agents/evaluator.py` para evitar bucles de reescritura destructivos de estilo.
+- [x] **Fase 5: Rituales Proactivos Soapbox**
+  - [x] 5.1 Rediseñar `src/agents/spark.py`, `src/agents/trench.py` y `src/agents/brand_health.py` con estructura Soapbox (Elogio a instinto + Contraste 90% industria + CTA de audio corto).
+- [x] **Fase 6: Modernización de la Suite de Tests & Verificación E2E**
+  - [x] 6.1 Eliminar asserts de cadenas exactas en `tests/test_rick_node.py`, `tests/test_conversation_ux.py`, `tests/test_rick_sagas_ux.py`, `tests/test_guionista.py`.
+  - [x] 6.2 Validar que la suite completa (101 tests) corra en verde y con alta velocidad (1.25s).

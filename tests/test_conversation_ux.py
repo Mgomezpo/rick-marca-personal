@@ -133,3 +133,51 @@ def test_scraping_failure_graceful_degradation():
     top = results["top_pattern"]
     assert top.rendimiento_relativo_promedio >= 1.5
     assert top.tipo_hook is not None
+
+
+def test_stanley_heavy_lifting_when_creator_has_blank_mind():
+    """
+    Verify that when creator sends a message with blank mind or writer's block,
+    RICK does not interrogate them like a form, but puts 2 real stories from their lore on the table.
+    """
+    engine = RickGraphEngine()
+    state = create_initial_state("user_miguel_01", "miguel_gomezpo")
+
+    state["messages"].append(
+        ConversationMessage(
+            role="user",
+            content="Tengo la mente en blanco, estoy bloqueado y no sé qué grabar hoy.",
+        )
+    )
+    state = engine.run(state)
+    res = state["final_response"]
+
+    assert res is not None
+    res_lower = res.lower()
+    # Verifies heavy lifting and presence of real receipts
+    assert "tranquilo" in res_lower or "no tienes que inventar" in res_lower
+    assert "excel" in res_lower or "playbooks" in res_lower or "clínica" in res_lower or "rick" in res_lower
+
+
+def test_stanley_meta_questions_and_smooth_redirection():
+    """
+    Verify that when creator asks meta questions (architecture, comparison to ChatGPT),
+    RICK answers with wit, references their real context, and smoothly steers back to the script.
+    """
+    engine = RickGraphEngine()
+    state = create_initial_state("user_miguel_01", "miguel_gomezpo")
+
+    state["messages"].append(
+        ConversationMessage(
+            role="user",
+            content="¿Cómo funciona tu arquitectura y por qué eres mejor que ChatGPT?",
+        )
+    )
+    state = engine.run(state)
+    res = state["final_response"]
+
+    assert res is not None
+    res_lower = res.lower()
+    assert "chatgpt" in res_lower or "contexto" in res_lower
+    assert "recibos" in res_lower or "excel" in res_lower or "domingos" in res_lower or "trinchera" in res_lower
+

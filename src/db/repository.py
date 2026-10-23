@@ -2,7 +2,51 @@
 import os
 import uuid
 from typing import Optional, List, Dict, Any
-from src.graph.state import CreatorProfile, LearningItem, ScriptDraft, ConversationMessage
+from src.graph.state import (
+    CreatorProfile,
+    LearningItem,
+    ScriptDraft,
+    ConversationMessage,
+    StoryReceipt,
+)
+
+DEFAULT_MIGUEL_RECEIPTS: List[StoryReceipt] = [
+    StoryReceipt(
+        id="papa_dental_excel",
+        summary="Automatizó en 30 min los Excels de la clínica dental de su papá para devolverle los domingos",
+        theme="alivio humano real > software corporativo inflado",
+        concrete_details=["30 minutos", "clínica dental de mi papá", "macros de Excel que le quitaban los domingos"],
+        punchline="A tu cliente no le importa tu stack de 10 agentes; le importa recuperar sus domingos.",
+    ),
+    StoryReceipt(
+        id="ayudasismo_civico",
+        summary="Construyó la plataforma cívica colaborativa AyudaSismo en horas durante la emergencia",
+        theme="instinto cívico y velocidad de trinchera",
+        concrete_details=["AyudaSismo", "horas críticas del terremoto", "despliegue en caliente sin pedir permiso"],
+        punchline="Cuando la fricción es de vida o muerte, el código o funciona en 10 minutos o sobra.",
+    ),
+    StoryReceipt(
+        id="rick_ireal_creacion",
+        summary="Construyó a RICK e Ireal harto de los playbooks de marketing que matan la voz real",
+        theme="antídoto al AI slop y playbooks clónicos",
+        concrete_details=["RICK", "Ireal", "playbooks de marketing que vuelven todo genérico"],
+        punchline="Seguir los playbooks de marketing destruye tu voz; la trinchera es lo único que no se puede falsificar.",
+    ),
+    StoryReceipt(
+        id="reel_handoff_md",
+        summary="El reel técnico de handoff.md que rompió la mediana sin adornos de edición",
+        theme="especificidad técnica cruda sobre edición sobre-producida",
+        concrete_details=["handoff.md", "captura de terminal", "cero transiciones flashy"],
+        punchline="Un archivo markdown real le gana a 10 horas de edición en After Effects si resuelve una fricción brutal.",
+    ),
+    StoryReceipt(
+        id="bancolombia_enterprise",
+        summary="Vio desde adentro cómo corporativos queman meses en burocracia para un cambio de 2 líneas",
+        theme="agilidad de creador-constructor vs lentitud enterprise",
+        concrete_details=["Bancolombia", "3 meses de comités para un cambio de 2 líneas"],
+        punchline="La ventaja de un solopreneur no es el presupuesto, es que puede testear en producción mientras ellos arman el comité.",
+    ),
+]
 
 
 class SupabaseRepository:
@@ -29,6 +73,7 @@ class SupabaseRepository:
         self._learnings: Dict[str, List[LearningItem]] = {}
         self._pieces: Dict[str, List[Dict[str, Any]]] = {}
         self._conversations: Dict[str, List[ConversationMessage]] = {}
+        self._story_banks: Dict[str, List[StoryReceipt]] = {}
 
     def is_healthy(self) -> bool:
         """Verify storage backend connectivity and readiness."""
@@ -46,25 +91,36 @@ class SupabaseRepository:
         if not user_id:
             return None
 
+        profile = None
         if self.client is not None:
             try:
                 res = self.client.table("user_profiles").select("*").eq("user_id", user_id).limit(1).execute()
                 if res.data:
                     row = res.data[0]
-                    return CreatorProfile(
+                    profile = CreatorProfile(
                         user_id=row["user_id"],
                         instagram_handle=row.get("instagram_handle", f"user_{user_id}"),
                         nicho=row.get("nicho", "General"),
                         mediana_views=float(row.get("mediana_views", 0.0)),
                         referentes=row.get("referentes", []),
+                        story_bank=self.get_story_bank(user_id),
                     )
             except Exception:
                 pass
 
-        return self._profiles.get(user_id)
+        if not profile:
+            profile = self._profiles.get(user_id)
+
+        if profile and not profile.story_bank:
+            profile.story_bank = self.get_story_bank(user_id)
+
+        return profile
 
     def upsert_creator_profile(self, profile: CreatorProfile) -> None:
         """Upsert creator profile scoped to user_id."""
+        if not profile.story_bank:
+            profile.story_bank = self.get_story_bank(profile.user_id)
+
         if self.client is not None:
             try:
                 data = {
@@ -79,6 +135,27 @@ class SupabaseRepository:
                 pass
 
         self._profiles[profile.user_id] = profile
+        self._story_banks[profile.user_id] = list(profile.story_bank)
+
+    def get_story_bank(self, user_id: str) -> List[StoryReceipt]:
+        """Get episodic story receipts for the creator."""
+        if user_id in self._story_banks and self._story_banks[user_id]:
+            return self._story_banks[user_id]
+        
+        # Canonical seed for Miguel Gomezpo / default creators
+        receipts = list(DEFAULT_MIGUEL_RECEIPTS)
+        self._story_banks[user_id] = receipts
+        return receipts
+
+    def save_story_receipt(self, user_id: str, receipt: StoryReceipt) -> None:
+        """Save a new episodic story receipt for user."""
+        bank = self.get_story_bank(user_id)
+        # Avoid duplicate ids
+        filtered = [r for r in bank if r.id != receipt.id]
+        filtered.append(receipt)
+        self._story_banks[user_id] = filtered
+        if user_id in self._profiles:
+            self._profiles[user_id].story_bank = filtered
 
     def save_learning(self, learning: LearningItem) -> str:
         """Save a procedural learning item strictly under user_id."""
@@ -129,14 +206,21 @@ class SupabaseRepository:
         return list(self._learnings.get(user_id, []))
 
     def save_piece(self, user_id: str, script: ScriptDraft, status: str = "draft") -> str:
-        """Save a script piece under user_id."""
+        """Save a script piece under user_id with non-forced multidimensional metadata mapping."""
         piece_id = str(uuid.uuid4())
+        idea_fields: Dict[str, Any] = {}
+        if script.series is not None:
+            idea_fields["series"] = script.series.model_dump()
+
         piece_data = {
             "id": piece_id,
             "user_id": user_id,
             "title": script.titulo,
             "format": script.formato,
             "script": script.model_dump(),
+            "strategy_tag": script.pilar if script.pilar else None,
+            "plan_id": script.plan_id if script.plan_id else None,
+            "idea_fields": idea_fields,
             "status": status,
         }
 
@@ -165,6 +249,55 @@ class SupabaseRepository:
                 pass
 
         return list(self._pieces.get(user_id, []))
+
+    def get_series_pieces(self, user_id: str, series_id: str) -> List[Dict[str, Any]]:
+        """Retrieve episodes of a series sorted by episode_index, strictly isolated by user_id."""
+        if not user_id or not series_id:
+            return []
+
+        if self.client is not None:
+            try:
+                # Query strictly scoped to tenant user_id
+                res = self.client.table("pieces").select("*").eq("user_id", user_id).execute()
+                if res.data:
+                    matching = [
+                        p for p in res.data
+                        if ((p.get("idea_fields") or {}).get("series") or {}).get("series_id") == series_id
+                    ]
+                    matching.sort(key=lambda x: ((x.get("idea_fields") or {}).get("series") or {}).get("episode_index", 0))
+                    return matching
+            except Exception:
+                pass
+
+        user_pieces = self._pieces.get(user_id, [])
+        matching = [
+            p for p in user_pieces
+            if ((p.get("idea_fields") or {}).get("series") or {}).get("series_id") == series_id
+        ]
+        matching.sort(key=lambda x: ((x.get("idea_fields") or {}).get("series") or {}).get("episode_index", 0))
+        return matching
+
+    def get_pillar_pieces(self, user_id: str, pilar_name: str) -> List[Dict[str, Any]]:
+        """Retrieve pieces belonging to a brand pillar, strictly isolated by user_id."""
+        if not user_id or not pilar_name:
+            return []
+
+        if self.client is not None:
+            try:
+                res = (
+                    self.client.table("pieces")
+                    .select("*")
+                    .eq("user_id", user_id)
+                    .eq("strategy_tag", pilar_name)
+                    .execute()
+                )
+                if res.data:
+                    return res.data
+            except Exception:
+                pass
+
+        user_pieces = self._pieces.get(user_id, [])
+        return [p for p in user_pieces if p.get("strategy_tag") == pilar_name]
 
     def save_message(self, user_id: str, message: ConversationMessage) -> None:
         """Persist a conversation message strictly under user_id."""

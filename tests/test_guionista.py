@@ -78,3 +78,23 @@ def test_guionista_node_in_graph_state():
     assert draft.desarrollo.texto is not None
     assert draft.cierre.texto is not None
     assert new_state["iteration_count"] == 1
+
+
+def test_generate_script_draft_dual_coding_contrast():
+    profile = CreatorProfile(user_id="u1", instagram_handle="miguel_gomezpo")
+    pattern = WinningPattern(
+        pattern_id="pat_quiebre",
+        tipo_hook="quiebre_creencia",
+        formato="historia_personal",
+        emocion="autoridad",
+        rendimiento_relativo_promedio=2.2,
+        piezas_respaldo=4,
+    )
+    draft = generate_script_draft("Construí software que nadie quería.", pattern, profile)
+
+    assert draft.visual_hook is not None
+    assert len(draft.visual_hook) > 0
+    assert draft.spoken_hook is not None
+    assert len(draft.spoken_hook) > 0
+    assert draft.friction_step is not None
+

@@ -161,3 +161,34 @@ def test_spark_whatsapp_internal_team_voice():
     assert "luz verde" in msg.lower()
 
 
+def test_rick_node_blocked_creator_heavy_lifting():
+    state = create_initial_state("user_1", "miguel_gomezpo")
+    state["messages"].append(
+        ConversationMessage(role="user", content="Tengo la mente en blanco, no sé qué decir.")
+    )
+
+    result_state = rick_strategist_node(state)
+    response = result_state["final_response"]
+
+    assert response is not None
+    assert result_state["current_intent"] == "extract_story"
+    # Heavy lifting: gives real options from receipts
+    assert "tranquilo" in response.lower() or "no tienes que inventar" in response.lower()
+    assert "1." in response and "2." in response
+
+
+def test_rick_node_meta_question_handling():
+    state = create_initial_state("user_1", "miguel_gomezpo")
+    state["messages"].append(
+        ConversationMessage(role="user", content="¿Por qué debería usarte a ti en vez de a ChatGPT?")
+    )
+
+    result_state = rick_strategist_node(state)
+    response = result_state["final_response"]
+
+    assert response is not None
+    # Answers with wit and redirects
+    assert "chatgpt" in response.lower() or "contexto" in response.lower()
+    assert "¿" in response  # Smooth redirection question
+
+

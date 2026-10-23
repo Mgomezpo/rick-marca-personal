@@ -4,31 +4,60 @@ from typing_extensions import TypedDict
 from pydantic import BaseModel, Field
 
 
+class StoryReceipt(BaseModel):
+    """Real episodic memory / receipt from creator's actual life and projects."""
+    id: str = Field(..., description="Identificador corto único de la anécdota")
+    summary: str = Field(..., description="Resumen conciso del hecho real")
+    theme: str = Field(..., description="Tesis o valor central (ej. 'alivio humano > software inflado')")
+    concrete_details: List[str] = Field(default_factory=list, description="Detalles hiper-específicos (nombres, tiempos, herramientas)")
+    punchline: Optional[str] = Field(default=None, description="La conclusión o lección de trinchera que deja")
+
+
 class ScriptBlock(BaseModel):
     """Canonical block of a technical script (Hook, Desarrollo, Cierre/CTA)."""
     texto: str = Field(..., description="Texto exacto hablado sin desvíos ni rodeos")
     intencion: str = Field(..., description="Efecto psicológico o intención dramática")
-    camara: str = Field(..., description="Indicación visual de cámara y plano")
+    camara: str = Field(default="", description="Indicación visual de cámara y plano")
+    visual_text: Optional[str] = Field(default=None, description="Texto visual en pantalla (Visual Hook)")
+
+
+class SeriesMetadata(BaseModel):
+    """Metadata for episodic saga or series continuity."""
+    series_id: str = Field(..., description="Identificador único de la saga o serie")
+    series_title: str = Field(..., description="Título temático o nombre de la serie")
+    episode_index: int = Field(..., description="Número de episodio actual (1-indexed)")
+    total_episodes: Optional[int] = Field(default=None, description="Total planeado de episodios en la saga")
+    previous_piece_id: Optional[str] = Field(default=None, description="ID de la pieza anterior en la secuencia")
+    next_piece_id: Optional[str] = Field(default=None, description="ID de la siguiente pieza en la secuencia")
 
 
 class ScriptDraft(BaseModel):
-    """Structured technical script adhering to the 3-block standard."""
+    """Structured technical script with Dual-Coding Contrast and Anti-Slop psychology."""
     titulo: str = Field(..., description="Título corto del guion")
     formato: str = Field(default="Reel", description="Formato (Reel, TikTok, etc.)")
     duracion_objetivo: int = Field(default=45, description="Duración en segundos")
     hook: ScriptBlock = Field(..., description="Bloque inicial de enganche")
     desarrollo: ScriptBlock = Field(..., description="Bloque de desarrollo y anécdota")
     cierre: ScriptBlock = Field(..., description="Bloque de cierre / llamado a acción")
+    # Multidimensional content dimensions (Sagas, Brand Pillars, Plans)
+    pilar: Optional[str] = Field(default=None, description="Pilar estratégico de marca (ej. 'Mentalidad', 'Ventas')")
+    series: Optional[SeriesMetadata] = Field(default=None, description="Metadatos de saga o miniserie episódica")
+    plan_id: Optional[str] = Field(default=None, description="ID del plan de contenido o campaña si aplica")
+    # Stanley-level Dual-Coding fields
+    visual_hook: Optional[str] = Field(default=None, description="Texto en pantalla que contrasta con el audio hablado")
+    spoken_hook: Optional[str] = Field(default=None, description="Gancho hablado en audio de segundo cero")
+    friction_step: Optional[str] = Field(default=None, description="Colisión o quiebre cognitivo en <10 palabras")
 
 
 class CreatorProfile(BaseModel):
-    """Profile of the content creator."""
+    """Profile of the content creator with Lore & Receipts episodic memory."""
     user_id: str = Field(..., description="Identificador único del usuario / tenant")
     instagram_handle: str = Field(..., description="Handle de Instagram del creador")
     nicho: str = Field(default="General", description="Sector o nicho de contenido")
     mediana_views: float = Field(default=0.0, description="Mediana de vistas de la cuenta")
     tono_voz: str = Field(default="directo y auténtico", description="Tono y estilo de voz")
     referentes: List[str] = Field(default_factory=list, description="Handles de referentes de cabecera")
+    story_bank: List[StoryReceipt] = Field(default_factory=list, description="Banco de anécdotas e historias reales del creador")
 
 
 class EvaluationResult(BaseModel):
@@ -133,6 +162,12 @@ class GraphState(TypedDict, total=False):
     brand_health_report: Optional[BrandHealthReport]
     proactive_spark: Optional[ProactiveSpark]
     governor_decision: Optional[GovernorDecision]
+    # Multidimensional extensions
+    series_metadata: Optional[SeriesMetadata]
+    pilar: Optional[str]
+    plan_id: Optional[str]
+    # Episodic receipts
+    story_bank: Optional[List[StoryReceipt]]
 
 
 def create_initial_state(user_id: str, handle: str = "") -> GraphState:
@@ -159,6 +194,10 @@ def create_initial_state(user_id: str, handle: str = "") -> GraphState:
         brand_health_report=None,
         proactive_spark=None,
         governor_decision=None,
+        series_metadata=None,
+        pilar=None,
+        plan_id=None,
+        story_bank=[],
     )
 
 
