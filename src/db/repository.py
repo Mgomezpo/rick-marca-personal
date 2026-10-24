@@ -442,3 +442,17 @@ class SupabaseRepository:
 
         self._conversations[user_id] = []
 
+    def reset_user(self, user_id: str) -> None:
+        """Reset profile, conversation, and cached memories for a clean onboarding."""
+        self.clear_conversation(user_id)
+        if user_id in self._profiles:
+            del self._profiles[user_id]
+        if user_id in self._story_banks:
+            del self._story_banks[user_id]
+        if self.client is not None:
+            try:
+                self.client.table("user_profiles").delete().eq("user_id", user_id).execute()
+                self.client.table("episodic_memory").delete().eq("user_id", to_db_uuid(user_id)).execute()
+            except Exception as e:
+                logger.warning(f"Error resetting user in DB: {e}")
+

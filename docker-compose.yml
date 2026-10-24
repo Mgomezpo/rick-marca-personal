@@ -16,3 +16,16 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+
+  rick-telegram:
+    build: .
+    container_name: rick-telegram-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TZ=America/Bogota
+      - PYTHONUNBUFFERED=1
+    command: ["python", "-m", "src.services.telegram_bot"]
+    depends_on:
+      - rick-multitenant
