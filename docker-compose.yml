@@ -27,5 +27,7 @@ services:
       - TZ=America/Bogota
       - PYTHONUNBUFFERED=1
     command: ["python", "-m", "src.services.telegram_bot"]
+    healthcheck:
+      disable: true
     depends_on:
       - rick-multitenant
