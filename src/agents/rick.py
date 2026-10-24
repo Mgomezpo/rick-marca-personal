@@ -124,20 +124,41 @@ def rick_strategist_node(state: GraphState) -> GraphState:
             if fetched_bank:
                 story_bank = fetched_bank
                 onboarding_updates["story_bank"] = list(fetched_bank)
-    if not story_bank and handle_match:
+    footprint_report = None
+    if handle_match:
         extracted_handle = handle_match.group(1).rstrip(".")
-        new_receipts = receipt_extractor_service.extract_receipts_from_content(
-            creator_handle=extracted_handle,
-            raw_text_or_posts=last_user_message,
+        from src.services.profile_analyzer import profile_analyzer_service
+        footprint_report = profile_analyzer_service.analyze_creator_footprint(
+            handle=extracted_handle,
+            user_id=state.get("user_id"),
         )
-        story_bank = new_receipts
-        # Tenant-isolated copy: never mutate the incoming profile/state objects in place
+        if not story_bank:
+            new_receipts = receipt_extractor_service.extract_receipts_from_content(
+                creator_handle=extracted_handle,
+                raw_text_or_posts=f"{footprint_report.biography} {footprint_report.recent_posts_summary} {footprint_report.diagnostico_critico}",
+            )
+            story_bank = new_receipts
+            onboarding_updates["story_bank"] = list(new_receipts)
+
+        # Tenant-isolated copy: update profile with verified handle, niche, and median
         if profile:
             profile = profile.model_copy(
-                update={"instagram_handle": extracted_handle, "story_bank": list(new_receipts)}
+                update={
+                    "instagram_handle": extracted_handle,
+                    "nicho": footprint_report.nicho,
+                    "mediana_views": footprint_report.median_views,
+                    "story_bank": list(story_bank or []),
+                }
             )
-            onboarding_updates["creator_profile"] = profile
-        onboarding_updates["story_bank"] = list(new_receipts)
+        else:
+            profile = CreatorProfile(
+                user_id=state.get("user_id", "creador"),
+                instagram_handle=extracted_handle,
+                nicho=footprint_report.nicho,
+                mediana_views=footprint_report.median_views,
+                story_bank=list(story_bank or []),
+            )
+        onboarding_updates["creator_profile"] = profile
         intent = "cold_onboarding"
 
     # Process user-shared reference link (reels or posts sent by creator)
@@ -235,29 +256,34 @@ def rick_strategist_node(state: GraphState) -> GraphState:
         history_str = "\n".join([f"{m.role.upper()}: {m.content}" for m in messages[-6:]])
         handle = profile.instagram_handle if profile else state.get("user_id", "creador")
 
+        footprint_context = ""
+        if footprint_report:
+            footprint_context = (
+                f"\n[DIAGNÓSTICO EN VIVO DE SU FEED Y HUELGA @{handle}]:\n"
+                f"- Nicho Identificado: {footprint_report.nicho}\n"
+                f"- Hechos / Bio / Proyectos: {footprint_report.recent_posts_summary or footprint_report.biography}\n"
+                f"- Diagnóstico Editorial Clave: {footprint_report.diagnostico_critico}\n"
+                f"- INSTRUCCIÓN OBLIGATORIA PARA ESTE TURNO: Hazle un review directo, técnico y fundamentado con los datos de su cuenta que tienes arriba. Dile con honestidad qué le funciona bien (ej. casos reales) vs qué le falta o qué oportunidad ves en su feed, y luego lanza la Pregunta #1: '¿Qué quieres lograr con tu marca personal? ¿Cuál es tu objetivo?'.\n\n"
+            )
+
         prompt = (
             f"PERFIL DEL CREADOR: @{handle} | Nicho: {profile.nicho if profile else 'General'}\n"
-            f"RECIBOS REALES EN MEMORIA (LORE):\n{receipts_str}\n\n"
+            f"RECIBOS REALES EN MEMORIA:\n{receipts_str}\n\n"
+            f"{footprint_context}"
             f"HISTORIAL RECIENTE:\n{history_str}\n\n"
             f"ÚLTIMO MENSAJE DEL CREADOR: '{last_user_message}'\n\n"
             f"INTENCIÓN DETECTADA: {intent}\n\n"
-            f"[MONÓLOGO INTERNO Y RESTRICCIONES DE CALIDAD]:\n"
-            f"- Prohibido caer en esta trampa genérica: {reasoning_trace.cliche_trap_to_avoid}\n"
-            f"- Ángulo contrarian a sostener: {reasoning_trace.contrarian_angle}\n"
-            f"- Recibo/Historia real ancla: {reasoning_trace.selected_receipt_id or 'Ninguno específico'}\n"
+            f"[CRITERIO EDITORIAL Y ÁNGULO]:\n"
+            f"- Ángulo contrarian: {reasoning_trace.contrarian_angle}\n"
+            f"- Trampa cliché a evitar: {reasoning_trace.cliche_trap_to_avoid}\n"
             f"- Subtexto analizado: {reasoning_trace.user_subtext}\n\n"
-            f"INSTRUCCIONES CLAVE:\n"
-            f"- REGLA TERMINANTE DE LENGUAJE: Cero metáforas militares o jerga belicista. Usa siempre 'experiencia real', 'práctica' o 'casos reales'.\n"
-            f"- FLUJO CANÓNICO DE ONBOARDING Y CALIBRACIÓN (ADR-008, máximo 1 sola pregunta viva por turno):\n"
-            f"  1. Si aún no tiene redes registradas: Mensaje de apertura con oferta de prueba ('Tu prueba corre por mi cuenta: después de que trabajemos juntos un tiempo, seguro que te vas a convencer de seguir trabajando conmigo. ¿Cuáles son tus redes? Déjame ver qué has estado haciendo 📲').\n"
-            f"  2. Tras recibir sus redes: Diagnóstico sólido y fundamentado del feed + Pregunta 1: '¿Qué quieres lograr con tu marca personal? ¿Cuál es tu objetivo?'.\n"
-            f"  3. Tras responder su objetivo: Pregunta 2 de cosmovisión y posturas: '¿Cuáles son tus posturas o visiones del mundo sobre los temas de tu marca? ¿Qué defiendes o ves diferente al resto?'.\n"
-            f"  4. Tras sus posturas: Perfilado estructurado + validación + entrega de 2-3 opciones de video fundamentadas con links de referentes del radar.\n"
-            f"- Si el creador comparte el link de un reel o creador que vio y le gustó: dale feedback con criterio editorial de Head of Content, destaca qué hace que ese gancho funcione, confirma que lo guardaste en el radar del equipo y proponle adaptar esa estructura a su marca.\n"
-            f"- Si el creador tiene la mente en blanco o está bloqueado: haz el heavy lifting proponiendo opciones concretas basadas en sus propios recibos reales.\n"
-            f"- Si hace preguntas meta (ChatGPT vs RICK, precios, arquitectura, /reset): responde con ingenio y anclaje en sus proyectos reales y redirígelo al guion.\n"
-            f"- Si comparte una anécdota: profundiza en la fricción real y sugiere estructurar el guion (o saga de 2 partes si es densa).\n"
-            f"- Tono: Asistente de marca personal, Head of Content, socio interno del equipo, directo, cero relleno corporativo, cero clichés de IA.\n\n"
+            f"INSTRUCCIONES OPERATIVAS:\n"
+            f"- Máximo 1 sola pregunta viva por turno.\n"
+            f"- Si es el primer mensaje y no tiene redes registradas: apertura canónica ofreciendo la prueba.\n"
+            f"- Si acaba de dar sus redes: hazle el review honesto y lanza la Pregunta 1 de objetivo.\n"
+            f"- Si comparte un reel de referencia: analiza su estructura, guárdalo en el radar y sugiere adaptarlo.\n"
+            f"- Si está bloqueado: haz el heavy lifting proponiendo 2 opciones basadas en sus recibos.\n"
+            f"- Si hace preguntas meta o /reset: responde con ingenio y anclaje en sus proyectos.\n\n"
             f"Responde como RICK directamente al creador:"
         )
 

@@ -117,7 +117,8 @@ class SupabaseRepository:
         profile = None
         if self.client is not None:
             try:
-                res = self.client.table("user_profiles").select("*").eq("user_id", user_id).limit(1).execute()
+                db_uid = to_db_uuid(user_id)
+                res = self.client.table("user_profiles").select("*").eq("user_id", db_uid).limit(1).execute()
                 if res.data:
                     row = res.data[0]
                     profile = CreatorProfile(
@@ -146,8 +147,9 @@ class SupabaseRepository:
 
         if self.client is not None:
             try:
+                db_uid = to_db_uuid(profile.user_id)
                 data = {
-                    "user_id": profile.user_id,
+                    "user_id": db_uid,
                     "instagram_handle": profile.instagram_handle,
                     "nicho": profile.nicho,
                     "mediana_views": profile.mediana_views,
@@ -251,9 +253,10 @@ class SupabaseRepository:
 
         if self.client is not None:
             try:
+                db_uid = to_db_uuid(learning.user_id)
                 data = {
                     "id": learning_id,
-                    "user_id": learning.user_id,
+                    "user_id": db_uid,
                     "statement": learning.statement,
                     "applies_when": learning.applies_when,
                     "confidence": learning.confidence,
@@ -274,7 +277,8 @@ class SupabaseRepository:
 
         if self.client is not None:
             try:
-                res = self.client.table("procedural_learnings").select("*").eq("user_id", user_id).execute()
+                db_uid = to_db_uuid(user_id)
+                res = self.client.table("procedural_learnings").select("*").eq("user_id", db_uid).execute()
                 if res.data:
                     return [
                         LearningItem(
@@ -451,8 +455,9 @@ class SupabaseRepository:
             del self._story_banks[user_id]
         if self.client is not None:
             try:
-                self.client.table("user_profiles").delete().eq("user_id", user_id).execute()
-                self.client.table("episodic_memory").delete().eq("user_id", to_db_uuid(user_id)).execute()
+                db_uid = to_db_uuid(user_id)
+                self.client.table("user_profiles").delete().eq("user_id", db_uid).execute()
+                self.client.table("episodic_memory").delete().eq("user_id", db_uid).execute()
             except Exception as e:
                 logger.warning(f"Error resetting user in DB: {e}")
 

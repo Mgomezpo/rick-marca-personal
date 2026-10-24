@@ -174,9 +174,9 @@ class RickTelegramBot:
         self.repo.reset_user(user_id)
 
         reply = (
-            "🔄 <b>Estudio reiniciado desde cero.</b>\n\n"
+            "🔄 **Estudio reiniciado desde cero.**\n\n"
             "Se ha limpiado tu perfil y memoria activa en la base de datos. "
-            "Escribe /start para arrancar el onboarding limpio como nuevo creador."
+            "Escribe `/start` para arrancar el onboarding limpio como nuevo creador."
         )
         await self.send_clean_message(update, reply)
 
