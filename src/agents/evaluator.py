@@ -164,7 +164,7 @@ def evaluate_script_quality(
     passed = (score >= 8.0 and not is_plag)
 
     # 3. Simulation
-    piezas = pattern.piezas_respaldo if pattern else 1
+    piezas = pattern.piezas_respaldo if pattern else 0
     avg_r = pattern.rendimiento_relativo_promedio if pattern else 1.0
     sim = calculate_simulation_probability(piezas_respaldo=piezas, avg_r=avg_r)
 

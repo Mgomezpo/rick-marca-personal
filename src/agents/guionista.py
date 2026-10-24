@@ -159,9 +159,87 @@ def generate_script_draft(
             plan_id=plan_id or previous_draft.plan_id,
             visual_hook=rev_visual,
             spoken_hook=rev_spoken,
-            friction_step=previous_draft.friction_step or "delegar lo que no dominas es quemar capital sin aprender.",
+            friction_step=previous_draft.friction_step or clean_story[:60],
         )
 
+    # -----------------------------------------------------------------
+    # PATH 1: LIVE LLM GENERATION (Dynamic creation tailored to creator)
+    # -----------------------------------------------------------------
+    if not llm_service.is_test_env:
+        try:
+            live_prompt = (
+                "ERES EL GUIONISTA TÉCNICO SENIOR DE RICK.\n"
+                "Escribe un guion técnico para short-form (Reel/TikTok de 45-60s) basado ESTRICTAMENTE en la historia real y nicho del creador.\n\n"
+                f"PERFIL:\n"
+                f"- Creador: @{profile.instagram_handle if profile else 'creador'}\n"
+                f"- Nicho: {profile.nicho if profile else 'General'}\n"
+                f"- Patrón empírico a emular: {pattern.tipo_hook} ({pattern.formato})\n"
+                f"- Ángulo contrarian: {reasoning_trace.contrarian_angle if reasoning_trace else 'Experiencia real sin clichés'}\n"
+                f"- Trampa cliché a evitar: {reasoning_trace.cliche_trap_to_avoid if reasoning_trace else 'Cero frases hechas'}\n"
+                f"- Saga: {'Episodio ' + str(series.episode_index) + ' de ' + str(series.total_episodes) if series else 'Pieza autoconclusiva'}\n\n"
+                f"HISTORIA REAL / EXPERIENCIA DEL CREADOR:\n"
+                f"'{clean_story}'\n\n"
+                "REGLAS TÉCNICAS OBLIGATORIAS:\n"
+                "1. Cero saludos ('Hola', 'Bienvenidos', 'En este video'). Empieza DENTRO de la escena o el dolor.\n"
+                "2. Dual-Coding: El hook visual en pantalla (máx 8 palabras) debe crear tensión y contrastar con el audio hablado, NO repetir las mismas palabras.\n"
+                "3. Cero frases de IA ('en este mundo cambiante', 'descubre el secreto', 'sumérgete', 'en conclusión', 'desata tu potencial').\n"
+                "4. Tono: Charla directa de socio a socio en una mesa de café, nunca teleprompter ni locutor.\n"
+                f"5. {'El cierre DEBE ser un cliffhanger hacia el siguiente episodio.' if (series and series.total_episodes and series.episode_index < series.total_episodes) else 'El cierre fija la regla de oro práctica sin pedir likes vacíos.'}\n\n"
+                "Devuelve EXCLUSIVAMENTE un objeto JSON válido sin bloques markdown con esta estructura:\n"
+                "{\n"
+                '  "titulo": "Título contundente (máx 5 palabras)",\n'
+                '  "hook_texto": "Frase exacta hablada para los primeros 3 segundos",\n'
+                '  "hook_visual": "Texto en pantalla (máx 8 palabras) en minúsculas",\n'
+                '  "desarrollo_texto": "Desarrollo de la escena real y quiebre de creencia",\n'
+                '  "cierre_texto": "Cierre con regla de oro o cliffhanger",\n'
+                '  "friction_step": "La lección o quiebre central de 1 línea"\n'
+                "}"
+            )
+            raw_json = llm_service.generate(
+                prompt=live_prompt,
+                system_prompt="Eres el Guionista Técnico Senior. Devuelve exclusivamente JSON sin markdown.",
+                model=llm_service.writer_model,
+                temperature=0.6,
+            )
+            clean_json = raw_json.strip()
+            if clean_json.startswith("```"):
+                clean_json = re.sub(r"^```(?:json)?\s*|\s*```$", "", clean_json, flags=re.MULTILINE).strip()
+            data = json.loads(clean_json)
+
+            clean_visual = _clip_words(data.get("hook_visual") or "el quiebre clave.")
+            return ScriptDraft(
+                titulo=data.get("titulo", f"Guion: {story_summary[:25]}"),
+                formato="Reel",
+                duracion_objetivo=45,
+                hook=ScriptBlock(
+                    texto=data["hook_texto"],
+                    intencion="Desarmar objeción y capturar dolor con vulnerabilidad inmediata",
+                    camara="Primer plano cerrado, directo al lente sin rodeos",
+                    visual_text=clean_visual,
+                ),
+                desarrollo=ScriptBlock(
+                    texto=data["desarrollo_texto"],
+                    intencion="Construir autoridad con experiencia práctica y desmontar la causa raíz",
+                    camara="Plano medio a cámara, mirada fija, tono natural y directo",
+                ),
+                cierre=ScriptBlock(
+                    texto=data["cierre_texto"],
+                    intencion="Fijar el principio clave sin clichés promocionales",
+                    camara="Pausa de 1 segundo antes del corte a negro",
+                ),
+                pilar=pilar,
+                series=series,
+                plan_id=plan_id,
+                visual_hook=clean_visual,
+                spoken_hook=data["hook_texto"].strip(' "'),
+                friction_step=data.get("friction_step", clean_story[:60]),
+            )
+        except Exception as e:
+            pass  # Fall through to deterministic template on error or offline
+
+    # -----------------------------------------------------------------
+    # PATH 2: DETERMINISTIC FALLBACK (For offline dev & fast test runs)
+    # -----------------------------------------------------------------
     # Formulate Hook
     if series is not None and series.episode_index > 1:
         hook_text = f"Ayer vimos la entrega anterior de {series.series_title}. Hoy en la parte {series.episode_index}: {story_summary}."
@@ -183,13 +261,12 @@ def generate_script_draft(
         first_sentence = clean_story.split(".")[0].strip()
         hook_text = f'"{first_sentence}."'
 
-    # Formulate Desarrollo (the friction step is spoken verbatim as the belief break)
-    friction_step = "delegar lo que no dominas es quemar capital sin aprender."
+    # Formulate Desarrollo grounded dynamically on the story
+    friction_step = clean_story[:80] if clean_story else "entender el dolor real antes de escalar."
     story_body = clean_story.rstrip(".") if clean_story else "este quiebre clave"
     desarrollo_text = (
-        f"El problema real no fue la herramienta, fue querer delegar lo que yo todavía no dominaba: "
-        f"{friction_step} "
-        f"Si tú no sabes explicar tu valor en una servilleta, nadie lo va a vender por ti: {story_body}."
+        f"El problema real no fue la herramienta: el error estuvo en no validar la causa raíz. "
+        f"Si no puedes explicar tu solución en una servilleta, nadie te la va a comprar: {story_body}."
     )
     desarrollo_intencion = "Construir autoridad con experiencia práctica y desmontar la causa raíz"
     desarrollo_camara = "Plano medio a cámara, mirada fija, tono natural y directo"
@@ -277,8 +354,8 @@ def guionista_node(state: GraphState) -> GraphState:
             tipo_hook="confesion_error",
             formato="historia_personal",
             emocion="vulnerabilidad",
-            rendimiento_relativo_promedio=2.2,
-            piezas_respaldo=5,
+            rendimiento_relativo_promedio=1.0,
+            piezas_respaldo=0,
         )
 
     profile = state.get("creator_profile")

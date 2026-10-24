@@ -31,9 +31,13 @@ class VoiceTranscriptionService:
         1. Query https://graph.facebook.com/v19.0/{media_id} to get the temporary download URL.
         2. Fetch binary payload using Bearer auth.
         """
-        if not self.whatsapp_token or self.is_test_env:
+        if self.is_test_env:
             logger.info(f"[SIMULATED MEDIA DOWNLOAD] media_id: {media_id}")
             return b"simulated_audio_payload"
+
+        if not self.whatsapp_token:
+            logger.error(f"Cannot download WhatsApp media {media_id}: WHATSAPP_TOKEN not configured in production.")
+            return None
 
         try:
             # Step 1: Query media URL

@@ -3,6 +3,10 @@ import os
 import json
 import logging
 from typing import Optional, List, Dict, Any
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from src.graph.state import StrategistReasoning
 
 logger = logging.getLogger("rick.services.llm")
@@ -63,16 +67,17 @@ class LLMService:
         if force_mock or self.is_test_env:
             return self._mock_completion(prompt, system_prompt)
 
-        # 1. Try OpenAI if configured
+        # 1. PRIMARY CHOICE: Try OpenAI first (target_model or gpt-4o)
         if self._openai_client:
             try:
+                openai_model = target_model if not target_model.startswith("gemini") else "gpt-4o"
                 messages = []
                 if system_prompt:
                     messages.append({"role": "system", "content": system_prompt})
                 messages.append({"role": "user", "content": prompt})
 
                 res = self._openai_client.chat.completions.create(
-                    model=target_model,
+                    model=openai_model,
                     messages=messages,
                     temperature=temperature,
                     max_tokens=max_tokens,
@@ -80,13 +85,17 @@ class LLMService:
                 if res.choices and res.choices[0].message.content:
                     return res.choices[0].message.content.strip()
             except Exception as e:
-                logger.error(f"OpenAI generation failed: {e}. Attempting fallback...")
+                err_str = str(e).lower()
+                if "429" in err_str or "rate" in err_str or "quota" in err_str or "insufficient_quota" in err_str:
+                    logger.warning(f"OpenAI rate limit / quota hit (429) on {openai_model}: {e}. Initiating automatic fallback to Gemini...")
+                else:
+                    logger.warning(f"OpenAI generation failed: {e}. Falling back to Gemini...")
 
-        # 2. Try Gemini fallback
+        # 2. FALLBACK: Try Gemini client
         if self._gemini_client:
             try:
+                gemini_model = target_model if target_model.startswith("gemini") else "gemini-2.5-flash"
                 from google.genai import types
-                gemini_model = "gemini-2.5-flash"
                 config = types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     temperature=temperature,
@@ -100,7 +109,11 @@ class LLMService:
                 if res.text:
                     return res.text.strip()
             except Exception as e:
-                logger.error(f"Gemini fallback generation failed: {e}")
+                err_str = str(e).lower()
+                if "429" in err_str or "rate" in err_str or "quota" in err_str or "resourceexhausted" in err_str:
+                    logger.warning(f"Gemini fallback rate limit / quota hit (429) on {gemini_model}: {e}")
+                else:
+                    logger.error(f"Gemini fallback generation failed: {e}")
 
         # 3. Last-resort contextual fallback
         return self._mock_completion(prompt, system_prompt)
@@ -122,10 +135,9 @@ class LLMService:
         # Meta question: architecture, how it works, why not chatgpt
         if "chatgpt" in u_lower or "claude" in u_lower or "como funcionas" in u_lower or "cómo funcionas" in u_lower or "arquitectura" in u_lower:
             return (
-                "la diferencia con chatgpt o claude es que ellos no tienen tu contexto vivo. "
-                "si les pides un guion, te dan un ensayo con subtítulos corporativos y frases como 'en este mundo cambiante'. "
-                "yo tengo tus 5 historias reales en memoria: desde cuando automatizaste en 30 minutos el excel de la clínica de tu papá para devolverle los domingos, "
-                "hasta la creación cívica de ayudasismo y el aprendizaje de handoff.md. cada gancho que armamos parte de lo que ya viviste, no de un playbook clónico.\n\n"
+                "la diferencia con chatgpt o claude es que ellos no tienen tu contexto vivo ni tu memoria de canal. "
+                "si les pides un guion, te dan un ensayo con subtítulos corporativos y frases genéricas como 'en este mundo cambiante'. "
+                "yo opero sobre tus historias y anécdotas vividas en memoria y los números reales de tus referentes. cada gancho que armamos parte de lo que tú y tu nicho viven, no de un playbook clónico.\n\n"
                 "¿quieres que bajemos esa primera pieza hoy?"
             )
 
@@ -141,10 +153,8 @@ class LLMService:
         # Blank mind / blocked creator (Heavy Lifting by RICK)
         if "mente en blanco" in u_lower or "bloqueado" in u_lower or "bloqueada" in u_lower or "sin ideas" in u_lower:
             return (
-                "tranquilo, no tienes que inventar nada de cero hoy. ya tienes historias reales listas para grabar:\n\n"
-                "1. por qué seguir playbooks de marketing mata tu voz (la razón exacta por la que decidiste construir a rick e ireal).\n"
-                "2. la automatización de 30 minutos con macros de excel para la clínica dental de tu papá para devolverle los domingos.\n\n"
-                "dime cuál te vibra más y yo hago el trabajo pesado de estructurar el gancho visual y el quiebre."
+                "tranquilo, no tienes que inventar nada de cero hoy. seguir playbooks genéricos de marketing mata tu voz; en rick extraemos tus piezas de tus vivencias reales con clientes.\n\n"
+                "dime qué problema o fricción técnica viviste recientemente y yo hago el trabajo pesado de estructurar el gancho visual y el quiebre."
             )
 
         # Multi-point / saga detection in user story
@@ -165,12 +175,11 @@ class LLMService:
             return (
                 "aquí tienes la estructura lista para grabar:\n\n"
                 "**visual hook (en pantalla):**\n"
-                "automatizar con 10 agentes es una trampa.\n\n"
+                "automatizar sin validar es una trampa.\n\n"
                 "**spoken hook (lo que dices):**\n"
-                "le armé a mi papá una automatización de 30 minutos para su clínica dental y le devolví los domingos. "
-                "mientras tanto, veo empresas quemando miles de dólares en agentes que nadie usa.\n\n"
+                "veo a creadores y empresas quemando meses en soluciones complejas que nadie usa.\n\n"
                 "**el quiebre:**\n"
-                "a tu cliente no le importa tu stack de herramientas; le importa recuperar su tiempo libre. "
+                "a tu cliente no le importa tu stack de herramientas; le importa resolver un dolor concreto en minutos. "
                 "si no puedes explicar el alivio en una servilleta, ningún software lo va a salvar por ti.\n\n"
                 "**cierre:**\n"
                 "antes de gastar en escalar, asegúrate de que tienes algo que funciona cuando estás tú solo."
@@ -221,11 +230,12 @@ class LLMService:
             "Devuelve ÚNICAMENTE el objeto JSON sin bloques de markdown adicionales:"
         )
 
-        # 1. Try OpenAI if configured
+        # 1. PRIMARY CHOICE: Try OpenAI first (gpt-4o with json_object)
         if self._openai_client:
             try:
+                openai_model = self.orchestrator_model if not self.orchestrator_model.startswith("gemini") else "gpt-4o"
                 res = self._openai_client.chat.completions.create(
-                    model=self.orchestrator_model,
+                    model=openai_model,
                     messages=[
                         {"role": "system", "content": "Devuelve exclusivamente un objeto JSON válido."},
                         {"role": "user", "content": reasoning_prompt},
@@ -237,9 +247,13 @@ class LLMService:
                     data = json.loads(res.choices[0].message.content)
                     return StrategistReasoning(**data)
             except Exception as e:
-                logger.warning(f"OpenAI think_and_route failed: {e}. Falling back...")
+                err_str = str(e).lower()
+                if "429" in err_str or "rate" in err_str or "quota" in err_str or "insufficient_quota" in err_str:
+                    logger.warning(f"OpenAI rate limit / quota hit (429) on think_and_route: {e}. Initiating automatic fallback to Gemini...")
+                else:
+                    logger.warning(f"OpenAI think_and_route failed: {e}. Falling back to Gemini...")
 
-        # 2. Try Gemini if configured
+        # 2. FALLBACK: Try Gemini
         if self._gemini_client:
             try:
                 from google.genai import types
@@ -248,16 +262,20 @@ class LLMService:
                     temperature=0.2,
                     response_mime_type="application/json",
                 )
+                gemini_model = self.orchestrator_model if self.orchestrator_model.startswith("gemini") else "gemini-2.5-flash"
                 res = self._gemini_client.models.generate_content(
-                    model=self.orchestrator_model,
+                    model=gemini_model,
                     contents=reasoning_prompt,
                     config=config,
                 )
                 if res.text:
-                    data = json.loads(res.text)
+                    clean_text = res.text.strip()
+                    if clean_text.startswith("```"):
+                        clean_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", clean_text, flags=re.MULTILINE).strip()
+                    data = json.loads(clean_text)
                     return StrategistReasoning(**data)
             except Exception as e:
-                logger.warning(f"Gemini think_and_route failed: {e}. Falling back...")
+                logger.warning(f"Gemini fallback think_and_route failed: {e}.")
 
         return self._mock_think_and_route(prompt, story_bank, current_intent)
 
@@ -284,7 +302,7 @@ class LLMService:
             return StrategistReasoning(
                 user_subtext="El creador está bloqueado creativamente y necesita que RICK proponga opciones concretas de su lore.",
                 cliche_trap_to_avoid="Decir 'no te preocupes, piensa en tus pasiones' o hacer preguntas abiertas vagas.",
-                selected_receipt_id=first_receipt_id or "rec_excel_papa",
+                selected_receipt_id=first_receipt_id,
                 contrarian_angle="El contenido que mejor convierte no se inventa de la nada: se extrae de tus cicatrices operativas.",
                 has_concrete_scene=False,
                 has_root_friction=False,

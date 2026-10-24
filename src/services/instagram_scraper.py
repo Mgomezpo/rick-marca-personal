@@ -3,7 +3,10 @@ import os
 import re
 import logging
 from typing import List, Dict, Any, Optional
+from dotenv import load_dotenv
 import httpx
+
+load_dotenv()
 from src.matrix.models import MatrixRow
 
 logger = logging.getLogger("rick.services.instagram_scraper")
@@ -44,8 +47,12 @@ class InstagramScraperService:
             return []
 
         # Fast deterministic path in unit test / CI environment
-        if self.is_test_env or not self.token or "your_apify" in self.token:
+        if self.is_test_env:
             return self._mock_niche_reels(keywords, limit)
+
+        if not self.token or "your_apify" in self.token:
+            logger.warning("Apify API token not configured in production. Returning empty reel search list.")
+            return []
 
         actor_url = f"https://api.apify.com/v2/acts/clockworks~instagram-reels-scraper/run-sync-get-dataset-items?token={self.token}"
         payload = {
@@ -58,12 +65,12 @@ class InstagramScraperService:
             with httpx.Client(timeout=20.0) as client:
                 resp = client.post(actor_url, json=payload)
                 if resp.status_code not in (200, 201):
-                    logger.warning(f"Apify search error HTTP {resp.status_code}. Fallback to mock.")
-                    return self._mock_niche_reels(keywords, limit)
+                    logger.warning(f"Apify search error HTTP {resp.status_code}. Returning empty list.")
+                    return []
 
                 items = resp.json()
                 if not isinstance(items, list):
-                    return self._mock_niche_reels(keywords, limit)
+                    return []
 
                 rows: List[MatrixRow] = []
                 for it in items:
@@ -92,11 +99,11 @@ class InstagramScraperService:
                     )
                     rows.append(row)
 
-                return rows if rows else self._mock_niche_reels(keywords, limit)
+                return rows
 
         except Exception as e:
-            logger.error(f"Error calling Apify niche search: {e}. Graceful fallback.")
-            return self._mock_niche_reels(keywords, limit)
+            logger.error(f"Error calling Apify niche search: {e}. Graceful empty return.")
+            return []
 
     def scrape_shared_link(self, url: str) -> Optional[MatrixRow]:
         """
@@ -108,7 +115,7 @@ class InstagramScraperService:
             return None
 
         # Fast mock path in test environment
-        if self.is_test_env or not self.token or "your_apify" in self.token:
+        if self.is_test_env:
             return MatrixRow(
                 post_id=url,
                 account_handle="@referente_compartido",
@@ -121,6 +128,10 @@ class InstagramScraperService:
                 emotion="autoridad",
                 duration_seconds=42,
             )
+
+        if not self.token or "your_apify" in self.token:
+            logger.warning(f"Apify token not configured in production. Cannot scrape shared link {url}.")
+            return None
 
         actor_url = f"https://api.apify.com/v2/acts/apify~instagram-reel-scraper/run-sync-get-dataset-items?token={self.token}"
         payload = {

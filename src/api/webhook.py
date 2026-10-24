@@ -27,9 +27,23 @@ def send_whatsapp_message(
     phone_id = phone_number_id or os.getenv("WHATSAPP_PHONE_NUMBER_ID")
     auth_token = token or os.getenv("WHATSAPP_TOKEN")
 
-    if not phone_id or not auth_token:
-        logger.info(f"[SIMULATED WHATSAPP OUTBOUND] To: {to_phone} | Message: {text[:60]}...")
-        return True
+    is_placeholder = (
+        not phone_id
+        or not auth_token
+        or "placeholder" in str(auth_token).lower()
+        or phone_id == "100000000000000"
+    )
+
+    if is_placeholder:
+        is_test = os.getenv("APP_ENV") == "test" or "PYTEST_CURRENT_TEST" in os.environ
+        if is_test:
+            logger.info(f"[SIMULATED WHATSAPP OUTBOUND (TEST)] To: {to_phone} | Message: {text[:60]}...")
+            return True
+        logger.error(
+            f"[WHATSAPP OUTBOUND ERROR] Cannot send WhatsApp message to {to_phone}: "
+            "WHATSAPP_PHONE_NUMBER_ID or WHATSAPP_TOKEN is unconfigured or placeholder in production."
+        )
+        return False
 
     url = f"https://graph.facebook.com/v19.0/{phone_id}/messages"
     headers = {

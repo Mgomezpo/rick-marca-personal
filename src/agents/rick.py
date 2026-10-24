@@ -113,12 +113,17 @@ def rick_strategist_node(state: GraphState) -> GraphState:
 
     profile = state.get("creator_profile")
     story_bank: List[StoryReceipt] = state.get("story_bank") or (profile.story_bank if profile else [])
-    
     intent = classify_intent(last_user_message, state) if last_user_message else state.get("current_intent", "chat")
-
-    # Multi-tenant Cold Onboarding check (Tenant #2 with empty receipts bank)
     handle_match = re.search(r"(?:^|\s)@([A-Za-z0-9_.]+)", last_user_message)
     onboarding_updates = {}
+    if not story_bank:
+        from src.services.session_runner import repo
+        user_id = state.get("user_id", "")
+        if user_id:
+            fetched_bank = repo.get_story_bank(user_id)
+            if fetched_bank:
+                story_bank = fetched_bank
+                onboarding_updates["story_bank"] = list(fetched_bank)
     if not story_bank and handle_match:
         extracted_handle = handle_match.group(1).rstrip(".")
         new_receipts = receipt_extractor_service.extract_receipts_from_content(
@@ -243,12 +248,13 @@ def rick_strategist_node(state: GraphState) -> GraphState:
             f"- Subtexto analizado: {reasoning_trace.user_subtext}\n\n"
             f"INSTRUCCIONES CLAVE:\n"
             f"- REGLA TERMINANTE DE LENGUAJE: Cero metáforas militares o jerga belicista. Usa siempre 'experiencia real', 'práctica' o 'casos reales'.\n"
-            f"- FLUJO DE ONBOARDING Y CALIBRACIÓN:\n"
-            f"  1. Si no tiene redes registradas: preséntate como el nuevo asistente de su marca personal, asegura que su prueba corre por tu cuenta ('después de que trabajemos juntos un tiempo seguro te vas a convencer de seguir trabajando conmigo') y pídele sus redes ('¿Cuáles son tus redes? Déjame ver qué has estado haciendo 📲').\n"
-            f"  2. Si acaba de dar sus redes: dale un diagnóstico bueno y fundamentado de su feed (sin prisa ni superficialidad) y hazle la pregunta 1: '¿Qué quieres lograr con tu marca personal? ¿Cuál es tu objetivo?'.\n"
-            f"  3. Si ya respondió su objetivo: indaga en sus posturas ('¿Cuáles son tus posturas o visiones del mundo sobre los temas de tu marca? ¿Qué defiendes o ves diferente al resto?').\n"
+            f"- FLUJO CANÓNICO DE ONBOARDING Y CALIBRACIÓN (ADR-008, máximo 1 sola pregunta viva por turno):\n"
+            f"  1. Si aún no tiene redes registradas: Mensaje de apertura con oferta de prueba ('Tu prueba corre por mi cuenta: después de que trabajemos juntos un tiempo, seguro que te vas a convencer de seguir trabajando conmigo. ¿Cuáles son tus redes? Déjame ver qué has estado haciendo 📲').\n"
+            f"  2. Tras recibir sus redes: Diagnóstico sólido y fundamentado del feed + Pregunta 1: '¿Qué quieres lograr con tu marca personal? ¿Cuál es tu objetivo?'.\n"
+            f"  3. Tras responder su objetivo: Pregunta 2 de cosmovisión y posturas: '¿Cuáles son tus posturas o visiones del mundo sobre los temas de tu marca? ¿Qué defiendes o ves diferente al resto?'.\n"
+            f"  4. Tras sus posturas: Perfilado estructurado + validación + entrega de 2-3 opciones de video fundamentadas con links de referentes del radar.\n"
             f"- Si el creador comparte el link de un reel o creador que vio y le gustó: dale feedback con criterio editorial de Head of Content, destaca qué hace que ese gancho funcione, confirma que lo guardaste en el radar del equipo y proponle adaptar esa estructura a su marca.\n"
-            f"- Si el creador tiene la mente en blanco o está bloqueado: haz el heavy lifting, proponle 2 opciones concretas basadas en sus propios recibos.\n"
+            f"- Si el creador tiene la mente en blanco o está bloqueado: haz el heavy lifting proponiendo opciones concretas basadas en sus propios recibos reales.\n"
             f"- Si hace preguntas meta (ChatGPT vs RICK, precios, arquitectura, /reset): responde con ingenio y anclaje en sus proyectos reales y redirígelo al guion.\n"
             f"- Si comparte una anécdota: profundiza en la fricción real y sugiere estructurar el guion (o saga de 2 partes si es densa).\n"
             f"- Tono: Asistente de marca personal, Head of Content, socio interno del equipo, directo, cero relleno corporativo, cero clichés de IA.\n\n"
@@ -292,12 +298,22 @@ def rick_strategist_node(state: GraphState) -> GraphState:
                 f"2. {s2.theme.capitalize()}: {s2.summary}.\n\n"
                 "dime cuál te vibra más y yo hago el trabajo pesado de estructurar el gancho visual y el quiebre."
             )
-        else:
+        elif story_bank and len(story_bank) == 1:
+            s1 = story_bank[0]
+            nicho_label = profile.nicho if profile and profile.nicho != "General" else "tu nicho"
             response = (
-                "tranquilo, no tienes que inventar nada de cero hoy. ya tienes historias reales listas:\n\n"
-                "1. Por qué seguir playbooks de marketing mata tu voz (la razón por la que creaste a RICK e Ireal).\n"
-                "2. La automatización de 30 min con macros de Excel para la clínica dental de tu papá.\n\n"
-                "dime cuál te vibra más y montamos el quiebre de inmediato."
+                "tranquilo, no tienes que inventar nada de cero hoy. ya tienes una historia real lista y un ángulo complementario:\n\n"
+                f"1. {s1.theme.capitalize()}: {s1.summary}.\n"
+                f"2. Quiebre de creencia en {nicho_label}: El mayor error que ves cometer a otros al intentar escalar sin validar la causa raíz.\n\n"
+                "dime cuál te vibra más y yo hago el trabajo pesado de estructurar el gancho visual y el quiebre."
+            )
+        else:
+            nicho_label = profile.nicho if profile and profile.nicho != "General" else "tu nicho"
+            response = (
+                "tranquilo, no tienes que inventar nada de cero hoy. te propongo dos ángulos concretos de alto impacto listos para armar:\n\n"
+                f"1. Por qué seguir los playbooks estándar en {nicho_label} mata tu diferenciación y retención.\n"
+                "2. La decisión o error técnico más incómodo que viviste recientemente resolviendo problemas para un cliente.\n\n"
+                "dime cuál te vibra más o compárteme una frase de lo que viviste hoy, y yo hago el trabajo pesado de estructurar el gancho y el quiebre."
             )
 
     elif intent == "meta_question":
@@ -308,10 +324,17 @@ def rick_strategist_node(state: GraphState) -> GraphState:
         response = llm_service.generate(prompt=prompt, system_prompt=RICK_CANONICAL_SYSTEM_PROMPT)
 
     elif intent == "chat":
-        response = (
-            "Buen día. En el equipo tenemos los referentes y números al día. "
-            "¿Qué problema o anécdota real con clientes trabajamos hoy para el canal?"
-        )
+        if not story_bank:
+            response = (
+                "¡Ey! Soy RICK, el nuevo asistente de tu marca personal. "
+                "Tu prueba corre por mi cuenta: después de que trabajemos juntos un tiempo, seguro que te vas a convencer de seguir trabajando conmigo. "
+                "¿Cuáles son tus redes? Déjame ver qué has estado haciendo 📲"
+            )
+        else:
+            response = (
+                "Buen día. En el equipo tenemos los referentes y números al día. "
+                "¿Qué problema o anécdota real con clientes trabajamos hoy para el canal?"
+            )
 
     elif intent == "extract_story":
         if not has_scene:
